@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Rangos Médicos – VITALTRACK</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--navy:#1e3a8a;--navy-d:#122149;--navy-l:#c0d8ff;--accent:#3b82f6;--bg:#f0f2f5;--white:#fff;--danger:#dc2626;--ok:#16a34a;}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;}
+        .top-bar{background:var(--white);padding:14px 40px;display:flex;justify-content:center;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.06);gap:12px;}
+        .brand-text{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);letter-spacing:1px;}
+        
+        .main-container { max-width: 800px; margin: 40px auto; width: 100%; padding: 0 20px; flex: 1; }
+        .config-card { background: var(--white); border-radius: 16px; padding: 30px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+        
+        .header-title { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--bg); padding-bottom: 20px; }
+        .header-title i { font-size: 32px; color: var(--navy); }
+        .header-title h1 { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--navy-d); margin-bottom: 4px; }
+        .header-title p { color: #6b7280; font-size: 14px; }
+
+        .form-section { margin-bottom: 25px; }
+        .form-section h3 { font-size: 15px; font-weight: 600; color: var(--navy-d); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 13px; font-weight: 500; color: #4b5563; }
+        .input-wrapper { position: relative; }
+        .input-wrapper input { width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; font-size: 15px; outline: none; transition: 0.2s; }
+        .input-wrapper input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .input-wrapper span { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 13px; font-weight: 600; }
+
+        .btn-row { display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; border-top: 2px solid var(--bg); padding-top: 20px; }
+        .btn { padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-cancel { background: #f3f4f6; color: #4b5563; }
+        .btn-cancel:hover { background: #e5e7eb; }
+        .btn-save { background: var(--navy); color: white; }
+        .btn-save:hover { background: var(--navy-d); transform: translateY(-2px); }
+
+        #alert-msg { padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 14px; font-weight: 500; display: none; text-align: center; }
+        .alert-success { background: #dcfce7; color: #166534; display: block !important; }
+        .alert-error { background: #fee2e2; color: #991b1b; display: block !important; }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;" onerror="this.style.display='none'">
+    <span class="brand-text">VITALTRACK</span>
+</header>
+
+<div class="main-container">
+    <div class="config-card">
+        <div class="header-title">
+            <i class="bi bi-sliders"></i>
+            <div>
+                <h1>Configurar Límites de Alertas</h1>
+                <p>Paciente: <strong id="patient-name">Cargando...</strong></p>
+            </div>
+        </div>
+
+        <form id="configForm">
+            <div class="form-section">
+                <h3><i class="bi bi-heart-pulse-fill text-danger" style="color: var(--danger);"></i> Ritmo Cardíaco (BPM)</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Mínimo permitido</label>
+                        <div class="input-wrapper"><input type="number" id="bpm_min" required><span>BPM</span></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Máximo permitido</label>
+                        <div class="input-wrapper"><input type="number" id="bpm_max" required><span>BPM</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="bi bi-lungs-fill" style="color: var(--navy);"></i> Saturación de Oxígeno (SpO₂)</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Mínimo crítico permitido</label>
+                        <div class="input-wrapper"><input type="number" id="spo2_min" max="100" required><span>%</span></div>
+                    </div>
+                    <div class="input-group" style="opacity: 0.5; pointer-events: none;">
+                        <label>Máximo (Fijo por naturaleza)</label>
+                        <div class="input-wrapper"><input type="number" value="100" disabled><span>%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="bi bi-thermometer-half" style="color: #f59e0b;"></i> Temperatura (°C)</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Mínimo (Hipotermia)</label>
+                        <div class="input-wrapper"><input type="number" step="0.1" id="temp_min" required><span>°C</span></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Máximo (Fiebre)</label>
+                        <div class="input-wrapper"><input type="number" step="0.1" id="temp_max" required><span>°C</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alert-msg"></div>
+
+            <div class="btn-row">
+                <a href="#" id="btn-return" class="btn btn-cancel"><i class="bi bi-x-lg"></i> Cancelar</a>
+                <button type="submit" class="btn btn-save" id="btn-submit"><i class="bi bi-floppy"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL='https://iqzndwgcavyklxxybfey.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('id');
+
+    if (!patientId) {
+        alert("ID de paciente no válido");
+        window.location.href = "Signos.html";
+    }
+
+    // Configurar botón regresar
+    document.getElementById('btn-return').href = `MostrarSignos.html?id=${patientId}`;
+
+    // Cargar datos actuales
+    async function loadConfig() {
+        const { data, error } = await _supabase.from('pacientes').select('*').eq('id', patientId).single();
+        if (error || !data) return;
+        
+        document.getElementById('patient-name').textContent = `${data.nombre} ${data.apellido}`;
+        
+        // Poner valores actuales o por defecto si están vacíos
+        document.getElementById('bpm_min').value = data.bpm_min || 60;
+        document.getElementById('bpm_max').value = data.bpm_max || 100;
+        document.getElementById('spo2_min').value = data.spo2_min || 90;
+        document.getElementById('temp_min').value = data.temp_min || 36.0;
+        document.getElementById('temp_max').value = data.temp_max || 37.5;
+    }
+
+    // Guardar datos
+    document.getElementById('configForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit');
+        const alertMsg = document.getElementById('alert-msg');
+        
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+        btn.disabled = true;
+
+        const updates = {
+            bpm_min: parseInt(document.getElementById('bpm_min').value),
+            bpm_max: parseInt(document.getElementById('bpm_max').value),
+            spo2_min: parseInt(document.getElementById('spo2_min').value),
+            temp_min: parseFloat(document.getElementById('temp_min').value),
+            temp_max: parseFloat(document.getElementById('temp_max').value)
+        };
+
+        const { error } = await _supabase.from('pacientes').update(updates).eq('id', patientId);
+
+        if (error) {
+            alertMsg.className = 'alert-error';
+            alertMsg.textContent = 'Error al guardar: ' + error.message;
+        } else {
+            alertMsg.className = 'alert-success';
+            alertMsg.textContent = '¡Rangos actualizados correctamente!';
+            setTimeout(() => window.location.href = `MostrarSignos.html?id=${patientId}`, 1500);
+        }
+        
+        btn.innerHTML = '<i class="bi bi-floppy"></i> Guardar Cambios';
+        btn.disabled = false;
+    });
+
+    document.addEventListener('DOMContentLoaded', loadConfig);
+</script>
+<script src="alertas-globales.js"></script>
+</body>
+</html>

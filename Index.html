@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalTrack – Iniciar Sesión</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:    #1e3a8a;
+            --navy-d:  #122149;
+            --navy-l:  #c0d8ff;
+            --accent:  #3b82f6;
+            --bg:      #f0f2f5;
+            --white:   #ffffff;
+            --text:    #1a1a2e;
+            --muted:   #6b7280;
+            --danger:  #e11d48;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background decorative shapes */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -120px; right: -120px;
+            width: 450px; height: 450px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(30,58,138,.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -100px; left: -100px;
+            width: 380px; height: 380px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59,130,246,.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ── Card ── */
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(30,58,138,.15);
+            overflow: hidden;
+            position: relative;
+            animation: slideUp .5s ease both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header band */
+        .card-header {
+            background: linear-gradient(135deg, var(--navy-d) 0%, var(--navy) 100%);
+            padding: 36px 40px 28px;
+            text-align: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,.15);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .brand-icon svg { width: 26px; height: 26px; fill: white; }
+
+        .brand-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        .card-header p {
+            margin-top: 8px;
+            color: var(--navy-l);
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        /* Pulse animation on brand icon */
+        .pulse-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 16px;
+            border: 2px solid rgba(192,216,255,.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: .4; transform: scale(1); }
+            50%      { opacity: 1; transform: scale(1.08); }
+        }
+
+        /* Body */
+        .card-body {
+            padding: 36px 40px 32px;
+        }
+
+        .card-body h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .card-body .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 7px;
+            letter-spacing: .3px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+        .input-wrap svg {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            width: 17px; height: 17px;
+            color: var(--muted);
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            background: #fafafa;
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+            background: white;
+        }
+
+        /* Toggle password */
+        .toggle-pwd {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            cursor: pointer; color: var(--muted);
+            padding: 0; line-height: 1;
+        }
+        .toggle-pwd svg { width: 18px; height: 18px; }
+
+        /* Terms */
+        .terms-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 22px;
+            background: #f8faff;
+            border: 1.5px solid var(--navy-l);
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .terms-block input[type="checkbox"] {
+            width: 18px; height: 18px;
+            flex-shrink: 0;
+            accent-color: var(--navy);
+            margin-top: 2px;
+            cursor: pointer;
+        }
+        .terms-block label {
+            font-size: 12.5px;
+            color: var(--muted);
+            font-weight: 400;
+            margin: 0;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+        .terms-block a {
+            color: var(--navy);
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Error */
+        #errorMessage {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: var(--danger);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: none;
+        }
+        #errorMessage.visible { display: block; }
+
+        /* Submit button */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .2s, transform .1s;
+            letter-spacing: .3px;
+        }
+        .btn-login:hover:not(:disabled) {
+            opacity: .92;
+            transform: translateY(-1px);
+        }
+        .btn-login:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 20px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: #e5e7eb;
+        }
+
+        .support-link {
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+        .support-link a {
+            color: var(--navy);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .support-link a:hover { text-decoration: underline; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity .25s;
+        }
+        .modal-overlay.open {
+            opacity: 1; pointer-events: all;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 560px; width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 36px 40px;
+            transform: scale(.95);
+            transition: transform .25s;
+        }
+        .modal-overlay.open .modal { transform: scale(1); }
+
+        .modal h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--navy);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--navy-l);
+        }
+        .modal p, .modal li {
+            font-size: 13.5px;
+            color: #444;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        .modal h4 {
+            font-size: 14px;
+            color: var(--navy);
+            margin: 18px 0 6px;
+        }
+        .modal ul { padding-left: 20px; margin-bottom: 12px; }
+        .modal-close {
+            display: block;
+            margin: 24px auto 0;
+            padding: 10px 30px;
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .modal-close:hover { background: var(--navy-d); }
+    </style>
+</head>
+<body>
+
+<!-- ── Login Card ── -->
+<div class="login-card">
+    <div class="card-header">
+        <div class="brand">
+            <div class="brand-icon" style="position:relative">
+                <div class="pulse-ring"></div>
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M7 12l2-4 3 8 2-5 1 1h2" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span class="brand-name">VITALTRACK</span>
+        </div>
+        <p>Plataforma Clínica de Monitoreo en Tiempo Real</p>
+    </div>
+
+    <div class="card-body">
+        <h2>Bienvenido</h2>
+        <p class="subtitle">Ingresa tus credenciales para continuar</p>
+
+        <div id="errorMessage"></div>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="medico">Número de Médico</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    <input type="text" id="medico" name="medico" placeholder="Ej. MED-001" required autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="toggle-pwd" id="togglePwd" aria-label="Mostrar contraseña">
+                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terms & Privacy -->
+            <div class="terms-block">
+                <input type="checkbox" id="acceptTerms">
+                <label for="acceptTerms">
+                    He leído y acepto el <a onclick="openModal('privacy')">Aviso de Privacidad</a>
+                    y los <a onclick="openModal('terms')">Términos y Condiciones</a> de VitalTrack.
+                    El uso de esta plataforma implica el manejo de datos clínicos sensibles.
+                </label>
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">Iniciar Sesión</button>
+        </form>
+    </div>
+</div>
+
+<!-- ── Modal Aviso de Privacidad ── -->
+<div class="modal-overlay" id="modalPrivacy">
+    <div class="modal">
+        <h3>📋 Aviso de Privacidad</h3>
+        <p><strong>VitalTrack</strong> es una plataforma de monitoreo clínico operada por HNTEC-LTD. El presente aviso describe cómo se recopilan, usan y protegen los datos personales.</p>
+        <h4>Datos que recopilamos</h4>
+        <ul>
+            <li>Datos de identidad del médico: nombre, número de médico, correo electrónico.</li>
+            <li>Datos clínicos del paciente: signos vitales, historial de salud, información demográfica.</li>
+            <li>Datos de uso de la plataforma: accesos, cambios realizados y alertas generadas.</li>
+        </ul>
+        <h4>Finalidad del tratamiento</h4>
+        <ul>
+            <li>Monitoreo remoto y en tiempo real del estado de salud de los pacientes.</li>
+            <li>Generación de alertas médicas automáticas ante valores críticos.</li>
+            <li>Gestión administrativa del expediente clínico digital.</li>
+        </ul>
+        <h4>Seguridad</h4>
+        <p>Los datos se almacenan en Supabase (PostgreSQL en la nube) con acceso restringido mediante autenticación segura. No se comparten con terceros sin consentimiento expreso.</p>
+        <h4>Derechos ARCO</h4>
+        <p>El titular de los datos puede ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición contactando a soporte@vitaltrack.mx.</p>
+        <button class="modal-close" onclick="closeModal('privacy')">Entendido</button>
+    </div>
+</div>
+
+<!-- ── Modal Términos y Condiciones ── -->
+<div class="modal-overlay" id="modalTerms">
+    <div class="modal">
+        <h3>📜 Términos y Condiciones</h3>
+        <p>Al acceder a VitalTrack, el usuario acepta los siguientes términos de uso:</p>
+        <h4>1. Uso autorizado</h4>
+        <p>Esta plataforma está destinada exclusivamente a personal médico y de salud autorizado. Queda prohibido el acceso no autorizado o el uso de las credenciales de otro usuario.</p>
+        <h4>2. Responsabilidad clínica</h4>
+        <p>Las alertas generadas por el sistema son de carácter informativo. La responsabilidad de la decisión clínica recae exclusivamente en el médico tratante.</p>
+        <h4>3. Confidencialidad</h4>
+        <p>El médico se compromete a mantener la confidencialidad de la información clínica de los pacientes conforme a la NOM-024-SSA3-2010 y las leyes aplicables en materia de salud.</p>
+        <h4>4. Integridad de datos</h4>
+        <p>Está prohibido modificar, eliminar o exportar datos clínicos para fines distintos a los establecidos en el Aviso de Privacidad.</p>
+        <h4>5. Sesiones</h4>
+        <p>El usuario es responsable de cerrar su sesión al finalizar el uso de la plataforma. VitalTrack no se hace responsable por accesos no autorizados derivados del abandono de sesiones abiertas.</p>
+        <h4>6. Modificaciones</h4>
+        <p>HNTEC-LTD se reserva el derecho de modificar estos términos con previo aviso a los usuarios registrados.</p>
+        <button class="modal-close" onclick="closeModal('terms')">Aceptar</button>
+    </div>
+</div>
+
+<script>
+    /* ── Supabase ── */
+    const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* Redirect if already logged in */
+    if (localStorage.getItem('vitaltrack_user')) window.location.href = 'Home.html';
+
+    /* ── Toggle password ── */
+    const togglePwd = document.getElementById('togglePwd');
+    const pwdInput  = document.getElementById('password');
+    togglePwd.addEventListener('click', () => {
+        const isText = pwdInput.type === 'text';
+        pwdInput.type = isText ? 'password' : 'text';
+        togglePwd.querySelector('svg').innerHTML = isText
+            ? '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>'
+            : '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>';
+    });
+
+    /* ── Modal helpers ── */
+    function openModal(type) {
+        document.getElementById(type === 'privacy' ? 'modalPrivacy' : 'modalTerms').classList.add('open');
+    }
+    function closeModal(type) {
+        document.getElementById(type === 'privacy' ? 'modalPrivacy' : 'modalTerms').classList.remove('open');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+        el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+    });
+
+    /* ── Error helper ── */
+    function showError(msg) {
+        const el = document.getElementById('errorMessage');
+        el.textContent = msg;
+        el.classList.add('visible');
+    }
+    function clearError() {
+        const el = document.getElementById('errorMessage');
+        el.textContent = '';
+        el.classList.remove('visible');
+    }
+
+    /* ── Form submit ── */
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        clearError();
+
+        const terms = document.getElementById('acceptTerms');
+        if (!terms.checked) {
+            showError('Debes aceptar el Aviso de Privacidad y los Términos y Condiciones para continuar.');
+            return;
+        }
+
+        const no_medico = document.getElementById('medico').value.trim();
+        const password  = document.getElementById('password').value;
+
+        if (!no_medico || !password) {
+            showError('Por favor completa todos los campos.');
+            return;
+        }
+
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true;
+        btn.textContent = 'Verificando...';
+
+        try {
+            const { data: medicos, error } = await _supabase
+                .from('medicos')
+                .select('*')
+                .eq('no_medico', no_medico);
+
+            if (error) throw error;
+
+            if (medicos && medicos.length > 0) {
+                const user = medicos[0];
+                if (user.contrasena.toString() === password) {
+                    localStorage.setItem('vitaltrack_user', JSON.stringify(user));
+                    window.location.href = 'Home.html';
+                } else {
+                    showError('Número de médico o contraseña incorrectos.');
+                }
+            } else {
+                showError('Número de médico o contraseña incorrectos.');
+            }
+        } catch (err) {
+            console.error(err);
+            showError('Error de conexión. Por favor intente más tarde.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Iniciar Sesión';
+        }
+    });
+</script>
+</body>
+</html>

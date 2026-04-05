@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador IoT - VITALTRACK</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1e3a8a; color: white; text-align: center; padding: 50px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        button { padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        #btnStart { background: #16a34a; color: white; }
+        #btnStop { background: #dc2626; color: white; }
+        #log { margin-top: 20px; background: #f0f2f5; color: #333; padding: 15px; height: 250px; overflow-y: auto; text-align: left; font-family: monospace; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📡 Pulsera Virtual VitalTrack</h2>
+        <p>Este panel inyecta datos médicos en tiempo real a Supabase.</p>
+        
+        <button id="btnStart" onclick="iniciarSimulador()">▶ Iniciar Transmisión</button>
+        <button id="btnStop" onclick="detenerSimulador()" disabled>⏹ Detener</button>
+
+        <div id="log">Esperando para iniciar...<br></div>
+    </div>
+
+    <script>
+        // 1. Tus llaves de conexión
+        const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let intervaloTransmision;
+        const logDiv = document.getElementById('log');
+
+        function imprimirLog(mensaje) {
+            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${mensaje}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll hacia abajo
+        }
+
+        async function enviarDatosAleatorios() {
+            try {
+                // Paso A: Obtener un paciente aleatorio de la base de datos
+                const { data: pacientes, error: errPacientes } = await _supabase.from('pacientes').select('id, nombre').limit(5);
+                if (errPacientes || !pacientes || pacientes.length === 0) {
+                    imprimirLog("❌ Error: No hay pacientes en la base de datos.");
+                    return;
+                }
+                
+                // Selecciona uno al azar
+                const pacienteMuestra = pacientes[Math.floor(Math.random() * pacientes.length)];
+
+                // Paso B: Generar Signos Vitales (Con posibilidad de generar alertas)
+                // 10% de probabilidad de generar una alerta de Ritmo Cardíaco (más de 100)
+                const generarAlerta = Math.random() > 0.90; 
+                const bpm = generarAlerta ? Math.floor(Math.random() * (120 - 101) + 101) : Math.floor(Math.random() * (95 - 65) + 65);
+                const spo2 = Math.floor(Math.random() * (100 - 92) + 92);
+                const temperatura = (Math.random() * (37.2 - 36.1) + 36.1).toFixed(1);
+                const pasos = Math.floor(Math.random() * 5);
+
+                const nuevosSignos = {
+                    paciente_id: pacienteMuestra.id,
+                    bpm: bpm,
+                    spo2: spo2,
+                    temperatura: temperatura,
+                    pasos: pasos
+                };
+
+                // Paso C: Insertar a Supabase
+                const { error } = await _supabase.from('signos_vitales').insert([nuevosSignos]);
+
+                if (error) throw error;
+
+                let mensaje = `✅ ${pacienteMuestra.nombre} | BPM: ${bpm} | SpO2: ${spo2}%`;
+                if (bpm > 100) mensaje = `🚨 ¡ALERTA! ${pacienteMuestra.nombre} | BPM ALTO: ${bpm}`;
+                
+                imprimirLog(mensaje);
+
+            } catch (error) {
+                imprimirLog(`❌ Error enviando datos: ${error.message}`);
+            }
+        }
+
+        function iniciarSimulador() {
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            imprimirLog("🚀 Transmisión iniciada. Enviando datos cada 4 segundos...");
+            
+            // Envía el primer dato de inmediato y luego cada 4 segundos
+            enviarDatosAleatorios(); 
+            intervaloTransmision = setInterval(enviarDatosAleatorios, 4000);
+        }
+
+        function detenerSimulador() {
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+            clearInterval(intervaloTransmision);
+            imprimirLog("⏹ Transmisión detenida.");
+        }
+    </script>
+</body>
+</html>

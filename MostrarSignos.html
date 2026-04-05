@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor – VITALTRACK</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1e3a8a;
+            --navy-d: #122149;
+            --navy-l: #c0d8ff;
+            --accent: #3b82f6;
+            --bg: #f0f2f5;
+            --white: #fff;
+            --danger: #dc2626;
+            --warn: #d97706;
+            --ok: #16a34a;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            background: var(--white);
+            padding: 14px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            gap: 12px;
+        }
+
+        .brand-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--navy);
+            letter-spacing: 1px;
+        }
+
+        .app-bar {
+            background: linear-gradient(90deg, var(--navy-d), var(--navy));
+            padding: 0 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-bar a {
+            color: rgba(255, 255, 255, .8);
+            text-decoration: none;
+            padding: 14px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: color .2s;
+        }
+
+        .app-bar a:hover {
+            color: #fff;
+        }
+
+        .app-bar a.active {
+            color: #fff;
+            border-bottom-color: var(--navy-l);
+        }
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 28px 40px;
+            gap: 24px;
+            max-width: 1240px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .sidebar {
+            flex: 0 0 280px;
+        }
+
+        .profile-card {
+            background: var(--white);
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .06);
+            overflow: hidden;
+        }
+
+        .profile-img-wrap {
+            width: 100%;
+            height: 220px;
+            background: #e0e8f0;
+            overflow: hidden;
+        }
+
+        .profile-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            background: var(--navy);
+            color: white;
+            padding: 18px 20px;
+            text-align: center;
+        }
+
+        .profile-info h3 {
+            font-size: 12px;
+            color: var(--navy-l);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-family: 'DM Serif Display', serif;
+            font-size: 16px;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .patient-header {
+            background: var(--white);
+            padding: 22px 26px;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .ph-info h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            color: var(--navy);
+        }
+
+        .ph-info p {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 18px;
+            background: #f0f2f5;
+            color: var(--navy);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            transition: background .2s;
+        }
+
+        .btn-back:hover {
+            background: var(--navy-l);
+        }
+
+        .realtime-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #dcfce7;
+            color: #15803d;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .realtime-badge .dot {
+            width: 7px;
+            height: 7px;
+            background: #16a34a;
+            border-radius: 50%;
+            animation: blink 1.2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .3;
+            }
+        }
+
+        /* Monitor cards */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+        }
+
+        .monitor-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform .2s;
+        }
+
+        .monitor-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .mc-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .card-heart .mc-border {
+            background: #fa5252;
+        }
+
+        .card-oxy .mc-border {
+            background: var(--navy);
+        }
+
+        .card-temp .mc-border {
+            background: #fcc419;
+        }
+
+        .card-steps .mc-border {
+            background: #0ca678;
+        }
+
+        .mc-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .mc-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .card-heart .mc-icon {
+            color: #fa5252;
+        }
+
+        .card-oxy .mc-icon {
+            color: var(--navy);
+        }
+
+        .card-temp .mc-icon {
+            color: #f59e0b;
+        }
+
+        .card-steps .mc-icon {
+            color: #0ca678;
+        }
+
+        .mc-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 52px;
+            color: #1a1a2e;
+            display: block;
+            line-height: 1;
+            transition: color .4s;
+        }
+
+        .mc-value.alert {
+            color: var(--danger);
+        }
+
+        .mc-value.warn {
+            color: var(--warn);
+        }
+
+        .mc-unit {
+            font-size: 14px;
+            color: #9ca3af;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .mc-time {
+            font-size: 11px;
+            color: #d1d5db;
+            display: block;
+            margin-top: 8px;
+        }
+
+        /* Alert banner */
+        .alert-banner {
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-banner.visible {
+            display: flex;
+        }
+
+        .alert-banner.warning {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .alert-banner i {
+            font-size: 22px;
+            color: var(--danger);
+        }
+
+        .alert-banner.warning i {
+            color: var(--warn);
+        }
+
+        .alert-banner strong {
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+
+        .alert-banner p {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* History */
+        .history-section h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.4rem;
+            color: var(--navy);
+            margin-bottom: 14px;
+            font-weight: normal;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--white);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, .04);
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #9ca3af;
+            min-width: 80px;
+        }
+
+        .history-vals {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .hv {
+            font-size: 13px;
+        }
+
+        .hv strong {
+            color: var(--navy);
+        }
+
+        .loading {
+            text-align: center;
+            color: #9ca3af;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .footer {
+            background: var(--navy-d);
+            color: #c0d8ff;
+            padding: 28px 40px;
+            text-align: center;
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: #5b77a8;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script>
+        const userString = localStorage.getItem('vitaltrack_user');
+        let user;
+        if (!userString) { window.location.href = './Index.html'; } else { user = JSON.parse(userString); }
+        const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        function cerrarSesion() { localStorage.removeItem('vitaltrack_user'); window.location.href = './Index.html'; }
+    </script>
+
+    <header>
+        <div class="top-bar">
+            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;"
+                onerror="this.style.display='none'">
+            <span class="brand-text">VITALTRACK</span>
+        </div>
+        <nav class="app-bar">
+            <a href="Home.html">Inicio</a>
+            <a href="Usuarios.html">Usuarios</a>
+            <a href="Signos.html" class="active">Signos</a>
+            <a href="Soporte.html">Soporte</a>
+            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+        </nav>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="profile-card">
+                <div class="profile-img-wrap">
+                    <img id="profile-pic" src="assets/img/default-avatar.png" alt="Avatar"
+                        onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2UwZThmMCIgZD0iTTAgMGgyNHYyNEgweiIvPjxwYXRoIGZpbGw9IiM5Y2EzYWYiIGQ9Ik0xMiAxMmMyLjcgMCA0LjgtMi4xIDQuOC00LjhTMTQuNyAyLjQgMTIgMi40IDcuMiA0LjUgNy4yIDcuMiA5LjMgMTIgMTIgMTJ6bTAgMi40Yy0zLjIgMC05LjYgMS42LTkuNiA0Ljh2Mi40aDE5LjJ2LTIuNGMwLTMuMi02LjQtNC44LTkuNi00Ljh6Ii8+PC9zdmc+'">
+                </div>
+                <div class="profile-info">
+                    <h3>Médico Responsable</h3>
+                    <p id="doctor-name">Dr. …</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="patient-header">
+                <div class="ph-info">
+                    <h1 id="p-name">Cargando…</h1>
+                    <p id="p-details">ID: — | Edad: — | Género: —</p>
+                    <div class="realtime-badge"><span class="dot"></span> Tiempo real activo</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button id="btn-pdf" onclick="descargarPDF()" class="btn-back"
+                        style="background:var(--ok); color:white; border:none; cursor:pointer;"><i
+                            class="bi bi-file-earmark-pdf-fill"></i> Descargar Reporte</button>
+
+                    <a id="btn-config" href="#" class="btn-back"
+                        style="background:var(--navy-l); color:var(--navy-d);"><i class="bi bi-sliders"></i> Ajustar
+                        Rangos</a>
+                    <a href="Signos.html" class="btn-back"><i class="bi bi-arrow-left"></i> Regresar</a>
+                </div>
+            </div>
+
+            <!-- Alert banner -->
+            <div class="alert-banner" id="alert-banner">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                    <strong id="alert-title">Alerta detectada</strong>
+                    <p id="alert-text"></p>
+                </div>
+            </div>
+
+            <!-- Monitor cards -->
+            <div class="monitor-grid">
+                <div class="monitor-card card-heart">
+                    <div class="mc-border"></div>
+                    <span class="mc-title">Ritmo Cardíaco</span>
+                    <i class="bi bi-heart-pulse-fill mc-icon"></i>
+                    <span class="mc-value" id="val-bpm">—</span>
+                    <span class="mc-unit">BPM</span>
+                    <span class="mc-time" id="time-bpm"></span>
+                </div>
+                <div class="monitor-card card-oxy">
+                    <div class="mc-border"></div>
+                    <span class="mc-title">Saturación O₂</span>
+                    <i class="bi bi-lungs-fill mc-icon"></i>
+                    <span class="mc-value" id="val-spo2">—</span>
+                    <span class="mc-unit">% SpO₂</span>
+                    <span class="mc-time" id="time-spo2"></span>
+                </div>
+                <div class="monitor-card card-temp">
+                    <div class="mc-border"></div>
+                    <span class="mc-title">Temperatura</span>
+                    <i class="bi bi-thermometer-half mc-icon"></i>
+                    <span class="mc-value" id="val-temp">—</span>
+                    <span class="mc-unit">°C</span>
+                    <span class="mc-time" id="time-temp"></span>
+                </div>
+                <div class="monitor-card card-steps">
+                    <div class="mc-border"></div>
+                    <span class="mc-title">Actividad</span>
+                    <i class="bi bi-person-walking mc-icon"></i>
+                    <span class="mc-value" id="val-steps">—</span>
+                    <span class="mc-unit">Pasos</span>
+                    <span class="mc-time" id="time-steps"></span>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="history-section">
+                <h2>Últimas lecturas</h2>
+                <div id="history-list">
+                    <div class="loading">Cargando historial…</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <span style="font-family:'DM Serif Display',serif;font-size:18px;color:white;">VITALTRACK</span>
+        <div class="footer-copy">&copy; 2025 Hospital's name – HNTEC-LTD</div>
+    </footer>
+
+    <script>
+        if (user?.nombre) document.getElementById('doctor-name').textContent = user.nombre;
+        if (user?.avatar_url) document.getElementById('profile-pic').src = user.avatar_url;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('id');
+        if (!patientId) { alert('No se especificó un paciente.'); window.location.href = 'Signos.html'; }
+
+        function fmtTime(iso) { return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+        function fmtDateTime(iso) { return new Date(iso).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }); }
+
+        function updateCard(id, value, timeId, time) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+            const timeEl = document.getElementById(timeId);
+            if (timeEl) timeEl.textContent = 'Actualizado: ' + time;
+        }
+
+        // --- NUEVO: Variable global para los rangos de este paciente ---
+        let rangosPaciente = { bpm_min: 60, bpm_max: 100, spo2_min: 90, temp_min: 36.0, temp_max: 37.5 };
+
+        // --- ACTUALIZADO: Ahora revisa mínimos, máximos y temperatura ---
+        function checkAlerts(bpm, spo2, temp) {
+            const banner = document.getElementById('alert-banner');
+            const title = document.getElementById('alert-title');
+            const text = document.getElementById('alert-text');
+            const bpmEl = document.getElementById('val-bpm');
+            const spo2El = document.getElementById('val-spo2');
+            const tempEl = document.getElementById('val-temp');
+
+            if (bpmEl) bpmEl.classList.remove('alert', 'warn');
+            if (spo2El) spo2El.classList.remove('alert', 'warn');
+            if (tempEl) tempEl.classList.remove('alert', 'warn');
+
+            const issues = [];
+
+            if (bpm > rangosPaciente.bpm_max) { issues.push(`Ritmo cardíaco alto: ${bpm} BPM`); if (bpmEl) bpmEl.classList.add('alert'); }
+            if (bpm < rangosPaciente.bpm_min) { issues.push(`Ritmo cardíaco bajo: ${bpm} BPM`); if (bpmEl) bpmEl.classList.add('alert'); }
+
+            if (spo2 < rangosPaciente.spo2_min) { issues.push(`SpO₂ crítico: ${spo2}%`); if (spo2El) spo2El.classList.add('alert'); banner.classList.add('warning'); }
+
+            if (temp) {
+                if (temp > rangosPaciente.temp_max) { issues.push(`Fiebre: ${temp}°C`); if (tempEl) tempEl.classList.add('warn'); }
+                if (temp < rangosPaciente.temp_min) { issues.push(`Hipotermia: ${temp}°C`); if (tempEl) tempEl.classList.add('warn'); }
+            }
+
+            if (issues.length > 0) {
+                banner.classList.add('visible');
+                title.textContent = '⚠ Alerta Médica Detectada';
+                text.textContent = issues.join(' | ');
+            } else {
+                banner.classList.remove('visible', 'warning');
+            }
+        }
+
+        function renderHistory(records) {
+            const el = document.getElementById('history-list');
+            if (!records.length) { el.innerHTML = '<div class="loading">Sin lecturas previas.</div>'; return; }
+            el.innerHTML = records.map(r => `
+            <div class="history-item">
+                <span class="history-time">${fmtDateTime(r.fecha_registro)}</span>
+                <div class="history-vals">
+                    <span class="hv"><strong>${r.bpm}</strong> bpm</span>
+                    <span class="hv"><strong>${r.spo2}</strong>% O₂</span>
+                    <span class="hv"><strong>${r.temperatura}°</strong>C</span>
+                    <span class="hv"><strong>${r.pasos}</strong> pasos</span>
+                </div>
+            </div>`).join('');
+        }
+
+        // --- ACTUALIZADO: Descarga los límites de la BD ---
+        async function loadData() {
+            // Load patient info
+            const { data: p, error: pErr } = await _supabase.from('pacientes').select('*').eq('id', patientId).single();
+            if (pErr || !p) { alert('Paciente no encontrado.'); window.location.href = 'Signos.html'; return; }
+
+            document.getElementById('p-name').textContent = `${p.nombre} ${p.apellido}`;
+            document.getElementById('p-details').textContent = `ID: ${p.id.slice(0, 8)}… | Edad: ${p.edad || 'N/A'} | Género: ${p.genero || 'N/A'} | Estado: ${p.status || '—'}`;
+
+            // Configurar enlace del botón "Ajustar Rangos"
+            const btnConfig = document.getElementById('btn-config');
+            if (btnConfig) btnConfig.href = `ConfiguracionRangos.html?id=${patientId}`;
+
+            // Guardar en memoria los límites configurados
+            rangosPaciente = {
+                bpm_min: p.bpm_min || 60,
+                bpm_max: p.bpm_max || 100,
+                spo2_min: p.spo2_min || 90,
+                temp_min: p.temp_min || 36.0,
+                temp_max: p.temp_max || 37.5
+            };
+
+            // Load latest vitals
+            const { data: signs } = await _supabase.from('signos_vitales')
+                .select('*').eq('paciente_id', patientId)
+                .order('fecha_registro', { ascending: false }).limit(10);
+
+            if (signs && signs.length > 0) {
+                const latest = signs[0];
+                const t = fmtTime(latest.fecha_registro);
+                updateCard('val-bpm', latest.bpm, 'time-bpm', t);
+                updateCard('val-spo2', latest.spo2, 'time-spo2', t);
+                updateCard('val-temp', latest.temperatura, 'time-temp', t);
+                updateCard('val-steps', latest.pasos, 'time-steps', t);
+
+                // Manda los 3 parámetros a evaluar
+                checkAlerts(latest.bpm, latest.spo2, latest.temperatura);
+            }
+
+            renderHistory(signs || []);
+        }
+
+        // --- ACTUALIZADO: Envía la temperatura cuando llegan datos nuevos ---
+        function startRealtime() {
+            _supabase.channel(`patient-${patientId}`)
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'signos_vitales', filter: `paciente_id=eq.${patientId}` },
+                    payload => {
+                        const r = payload.new;
+                        const t = fmtTime(r.fecha_registro);
+                        updateCard('val-bpm', r.bpm, 'time-bpm', t);
+                        updateCard('val-spo2', r.spo2, 'time-spo2', t);
+                        updateCard('val-temp', r.temperatura, 'time-temp', t);
+                        updateCard('val-steps', r.pasos, 'time-steps', t);
+
+                        // Manda los 3 parámetros a evaluar en tiempo real
+                        checkAlerts(r.bpm, r.spo2, r.temperatura);
+
+                        // Reload history
+                        loadData();
+                    })
+                .subscribe();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { loadData(); startRealtime(); });
+
+        async function descargarPDF() {
+        // Cambiamos el texto del botón temporalmente
+        const btn = document.getElementById('btn-pdf');
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
+        btn.disabled = true;
+
+        try {
+            // Inicializar jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Obtener datos del paciente
+            const { data: p } = await _supabase.from('pacientes').select('*').eq('id', patientId).single();
+            
+            // 2. Obtener TODO el historial de signos de este paciente
+            const { data: signs } = await _supabase.from('signos_vitales')
+                .select('*')
+                .eq('paciente_id', patientId)
+                .order('fecha_registro', { ascending: false }); // Del más reciente al más viejo
+
+            // 3. Escribir el encabezado del PDF
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(30, 58, 138); // Color Navy de tu diseño
+            doc.text("Reporte de Signos Vitales - VITALTRACK", 14, 20);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Paciente: ${p.nombre} ${p.apellido}`, 14, 30);
+            doc.text(`Edad: ${p.edad || 'N/A'} | Género: ${p.genero || 'N/A'}`, 14, 36);
+            doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-MX')} ${new Date().toLocaleTimeString('es-MX')}`, 14, 42);
+
+            // 4. Armar la tabla de datos
+            if (!signs || signs.length === 0) {
+                doc.text("No hay lecturas registradas para este paciente.", 14, 55);
+            } else {
+                const filas = signs.map(r => [
+                    fmtDateTime(r.fecha_registro), 
+                    `${r.bpm} bpm`, 
+                    `${r.spo2} %`, 
+                    `${r.temperatura} °C`,
+                    r.pasos
+                ]);
+
+                // Dibujar la tabla automáticamente
+                doc.autoTable({
+                    startY: 50,
+                    head: [['Fecha y Hora', 'Ritmo Cardíaco', 'SpO2', 'Temp.', 'Pasos']],
+                    body: filas,
+                    theme: 'striped',
+                    headStyles: { fillColor: [30, 58, 138] }, // Color Navy
+                    styles: { fontSize: 10, cellPadding: 3 }
+                });
+            }
+
+            // 5. Descargar el archivo
+            doc.save(`Expediente_${p.nombre}_${p.apellido}.pdf`);
+
+        } catch (error) {
+            console.error("Error generando PDF:", error);
+            alert("Hubo un error al generar el PDF.");
+        } finally {
+            // Restaurar el botón
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
+        }
+    }
+    </script>
+<script src="alertas-globales.js"></script>
+</body>
+
+</html>
