@@ -8,9 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --navy: #1e3a8a;
@@ -179,12 +177,17 @@
             transition: all .2s;
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-navy {
             background: var(--navy);
             color: #fff;
         }
 
-        .btn-navy:hover {
+        .btn-navy:hover:not(:disabled) {
             background: var(--navy-d);
             color: #fff;
         }
@@ -194,7 +197,7 @@
             color: var(--navy);
         }
 
-        .btn-light:hover {
+        .btn-light:hover:not(:disabled) {
             background: var(--navy-l);
         }
 
@@ -231,8 +234,17 @@
             border-bottom: none;
         }
 
-        tbody tr:hover {
+        tbody tr:hover:not(.row-inactive) {
             background: #fcfcff;
+        }
+
+        .row-inactive {
+            opacity: 0.6;
+            background-color: #f9fafb;
+        }
+
+        .row-inactive td {
+            color: #6b7280;
         }
 
         .badge {
@@ -267,7 +279,7 @@
             color: var(--navy);
         }
 
-        .btn-edit:hover {
+        .btn-edit:hover:not(:disabled) {
             background: var(--navy-l);
         }
 
@@ -276,7 +288,7 @@
             color: var(--danger);
         }
 
-        .btn-delete:hover {
+        .btn-delete:hover:not(:disabled) {
             background: #fee2e2;
         }
 
@@ -293,6 +305,11 @@
             font-size: 13px;
             margin-right: 10px;
             flex-shrink: 0;
+        }
+
+        .row-inactive .patient-avatar {
+            background: #e5e7eb;
+            color: #9ca3af;
         }
 
         .name-cell {
@@ -321,7 +338,6 @@
             margin-top: 10px;
         }
 
-        /* Confirm modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -382,7 +398,6 @@
             justify-content: center;
         }
 
-        /* Estilos para el estado IoT */
         .status-iot {
             display: inline-flex;
             align-items: center;
@@ -415,12 +430,10 @@
                 transform: scale(0.95);
                 box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
             }
-
             70% {
                 transform: scale(1);
                 box-shadow: 0 0 0 5px rgba(22, 163, 74, 0);
             }
-
             100% {
                 transform: scale(0.95);
                 box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
@@ -430,6 +443,14 @@
         .text-offline {
             color: #dc2626;
             font-weight: bold;
+        }
+
+        .row-inactive .text-offline,
+        .row-inactive .status-iot {
+            color: #9ca3af;
+        }
+        .row-inactive .dot-offline {
+            background-color: #9ca3af;
         }
     </style>
 </head>
@@ -450,8 +471,7 @@
 
     <header>
         <div class="top-bar">
-            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;"
-                onerror="this.style.display='none'">
+            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;" onerror="this.style.display='none'">
             <span class="brand-text">VITALTRACK</span>
         </div>
         <nav class="app-bar">
@@ -476,8 +496,7 @@
                 <input type="text" id="search-input" placeholder="Buscar paciente...">
             </div>
             <div class="toolbar-right">
-                <button class="btn btn-light" onclick="exportExcel()"><i class="bi bi-file-earmark-excel-fill"
-                        style="color: #0284c7;"></i> Exportar Excel</button>
+                <button class="btn btn-light" onclick="exportExcel()"><i class="bi bi-file-earmark-excel-fill" style="color: #0284c7;"></i> Exportar Excel</button>
                 <a href="AgregarUsuario.html" class="btn btn-navy"><i class="bi bi-plus-lg"></i> Nuevo Paciente</a>
             </div>
         </div>
@@ -509,17 +528,14 @@
         <div class="footer-copy">&copy; 2025 Hospital's name – All Rights Reserved by HNTEC-LTD</div>
     </footer>
 
-    <!-- Confirm delete modal -->
     <div class="modal-overlay" id="deleteModal">
         <div class="modal">
             <div class="modal-icon"><i class="bi bi-trash3-fill"></i></div>
             <h3>¿Eliminar paciente?</h3>
-            <p id="delete-modal-text">Esta acción no se puede deshacer. Se eliminará el paciente y todos sus registros
-                asociados.</p>
+            <p id="delete-modal-text">Esta acción no se puede deshacer. Se eliminará el paciente y todos sus registros asociados.</p>
             <div class="modal-actions">
                 <button class="btn btn-light" onclick="closeDeleteModal()">Cancelar</button>
-                <button class="btn btn-navy" id="confirm-delete-btn" style="background:var(--danger);">Sí,
-                    eliminar</button>
+                <button class="btn btn-navy" id="confirm-delete-btn" style="background:var(--danger);">Sí, eliminar</button>
             </div>
         </div>
     </div>
@@ -540,34 +556,43 @@
                 return;
             }
 
+            const sortedList = [...list].sort((a, b) => {
+                const isAActive = a.status?.toLowerCase() === 'activo';
+                const isBActive = b.status?.toLowerCase() === 'activo';
+                if (isAActive === isBActive) return 0;
+                return isAActive ? -1 : 1;
+            });
+
             const ahora = new Date();
 
-            tableBody.innerHTML = list.map(p => {
+            tableBody.innerHTML = sortedList.map(p => {
                 const name = `${p.nombre || ''} ${p.apellido || ''}`.trim();
                 const active = p.status?.toLowerCase() === 'activo';
 
-                // --- Lógica RQF-W06: Cálculo de Online/Offline ---
                 let isOnline = false;
                 if (p.ultima_lectura) {
                     const ultimaVez = new Date(p.ultima_lectura);
                     const diferenciaMinutos = (ahora - ultimaVez) / (1000 * 60);
-                    if (diferenciaMinutos < 5) isOnline = true; // Online si hubo datos hace menos de 5 min
+                    if (diferenciaMinutos < 5) isOnline = true; 
                 }
 
                 const statusIoT = isOnline
                     ? `<span class="status-iot"><span class="dot dot-online"></span>Online</span>`
                     : `<span class="status-iot text-offline"><span class="dot dot-offline"></span>Offline</span>`;
 
+                const rowClass = active ? '' : 'row-inactive';
+                const disableAttr = active ? '' : 'disabled';
+
                 return `
-            <tr>
+            <tr class="${rowClass}">
                 <td><div class="name-cell"><span class="patient-avatar">${initials(p.nombre, p.apellido)}</span>${name}</div></td>
                 <td><span class="badge ${active ? 'badge-green' : 'badge-red'}"><i class="bi ${active ? 'bi-circle-fill' : 'bi-x-circle-fill'}"></i>${p.status || 'Desconocido'}</span></td>
                 <td>${statusIoT}</td>
                 <td>${p.correo || '—'}</td>
-                <td>${p.telefono || '—'}</td> <td style="font-size:11px;color:#9ca3af;font-family:monospace;">${(p.id || '').slice(0, 8)}…</td>
+                <td>${p.telefono || '—'}</td> <td style="font-size:11px;font-family:monospace;">${(p.id || '').slice(0, 8)}…</td>
                 <td>
-                    <button class="btn btn-sm btn-edit" onclick="editPatient('${p.id}')"><i class="bi bi-pencil"></i> Editar</button>
-                    <button class="btn btn-sm btn-delete" onclick="openDeleteModal('${p.id}','${name}')"><i class="bi bi-trash3"></i> Eliminar</button>
+                    <button class="btn btn-sm btn-edit" onclick="editPatient('${p.id}')" ${disableAttr}><i class="bi bi-pencil"></i> Editar</button>
+                    <button class="btn btn-sm btn-delete" onclick="openDeleteModal('${p.id}','${name}')" ${disableAttr}><i class="bi bi-trash3"></i> Eliminar</button>
                 </td>
             </tr>`;
             }).join('');
@@ -576,22 +601,18 @@
         async function loadPatients() {
             if (!user?.id) return;
 
-            // 1. Traemos los pacientes
             const { data: pacientes, error: pError } = await _supabase
                 .from('pacientes')
                 .select('*')
                 .eq('doctor_id', user.id);
 
-            if (pError) { console.error(pError); return; }
+            if (pError) return;
 
-            // 2. Traemos la última fecha de registro de signos para cada paciente
-            // (Esto cumple con el monitoreo en tiempo real)
             const { data: ultimosSignos, error: sError } = await _supabase
                 .from('signos_vitales')
                 .select('paciente_id, fecha_registro')
                 .order('fecha_registro', { ascending: false });
 
-            // 3. Cruzamos los datos: asignamos "ultima_lectura" a cada objeto paciente
             allPatients = pacientes.map(p => {
                 const registro = ultimosSignos.find(s => s.paciente_id === p.id);
                 return {
@@ -602,6 +623,7 @@
 
             displayPatients(allPatients);
         }
+
         function editPatient(id) { window.location.href = `EditarPaciente.html?id=${id}`; }
 
         function openDeleteModal(id, name) {
@@ -609,6 +631,7 @@
             document.getElementById('delete-modal-text').textContent = `¿Estás seguro de que deseas eliminar a "${name}"? Esta acción no se puede deshacer.`;
             document.getElementById('deleteModal').classList.add('open');
         }
+
         function closeDeleteModal() {
             document.getElementById('deleteModal').classList.remove('open');
             patientToDelete = null;
@@ -616,8 +639,7 @@
 
         document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
             if (!patientToDelete) return;
-            const { error } = await _supabase.from('pacientes').delete().eq('id', patientToDelete);
-            if (error) { alert('Error al eliminar: ' + error.message); }
+            await _supabase.from('pacientes').delete().eq('id', patientToDelete);
             closeDeleteModal();
             loadPatients();
         });
@@ -628,13 +650,9 @@
         });
 
         function exportExcel() {
-            if (!allPatients.length) {
-                alert('No hay pacientes para exportar.');
-                return;
-            }
+            if (!allPatients.length) return;
 
             try {
-                // 1. Darle formato limpio a los datos para el Excel
                 const datosExcel = allPatients.map(p => ({
                     "ID": (p.id || '').slice(0, 8),
                     "Nombre": p.nombre || '',
@@ -646,30 +664,21 @@
                     "Estado": p.status || 'Desconocido'
                 }));
 
-                // 2. Crear el archivo Excel
                 const hoja = XLSX.utils.json_to_sheet(datosExcel);
                 const libro = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(libro, hoja, "Pacientes_VitalTrack");
 
-                // 3. Descargar el archivo con la fecha de hoy
                 const fechaHoy = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
                 XLSX.writeFile(libro, `Pacientes_VitalTrack_${fechaHoy}.xlsx`);
-
-            } catch (error) {
-                console.error("Error generando Excel:", error);
-                alert("Hubo un error al generar el archivo Excel.");
-            }
+            } catch (error) {}
         }
 
-        // 1. Escuchar a Supabase en tiempo real
         function startRealtimeIOT() {
             _supabase.channel('monitoreo-iot-usuarios')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'signos_vitales' }, payload => {
                     const nuevoSigno = payload.new;
-                    // Buscamos si ese signo es de alguno de nuestros pacientes en la tabla
                     const index = allPatients.findIndex(p => p.id === nuevoSigno.paciente_id);
                     if (index !== -1) {
-                        // Actualizamos su última lectura y redibujamos la tabla
                         allPatients[index].ultima_lectura = nuevoSigno.fecha_registro;
                         displayPatients(allPatients);
                     }
@@ -677,21 +686,18 @@
                 .subscribe();
         }
 
-        // 2. Revisar el tiempo automáticamente cada 30 segundos
-        // (Por si pasan 5 minutos y no han mandado datos, se ponga rojo sin recargar)
         setInterval(() => {
             if (allPatients.length > 0 && !searchInput.value) {
                 displayPatients(allPatients);
             }
         }, 30000);
 
-        // 3. Iniciar todo al cargar la página
         document.addEventListener('DOMContentLoaded', async () => {
             await loadPatients();
             startRealtimeIOT();
         });
     </script>
-<script src="alertas-globales.js"></script>
+    <script src="alertas-globales.js"></script>
 </body>
 
 </html>

@@ -1,59 +1,268 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador IoT - VITALTRACK</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1e3a8a; color: white; text-align: center; padding: 50px; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        button { padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
-        #btnStart { background: #16a34a; color: white; }
-        #btnStop { background: #dc2626; color: white; }
-        #log { margin-top: 20px; background: #f0f2f5; color: #333; padding: 15px; height: 250px; overflow-y: auto; text-align: left; font-family: monospace; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .dashboard {
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 850px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0f172a;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h2 i {
+            color: var(--accent-blue);
+        }
+
+        .status-badge {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .status-badge.active .dot {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 1.5s infinite;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .controls {
+            padding: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(30,41,59,1) 0%, rgba(15,23,42,0.3) 100%);
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        #btnStart {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        #btnStart:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        #btnStop {
+            background: transparent;
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        #btnStop:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .terminal-container {
+            padding: 0 25px 30px 25px;
+        }
+
+        .terminal-header {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        #log {
+            background: #000000;
+            padding: 20px;
+            height: 320px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+            font-size: 15.5px; 
+            font-weight: 500; 
+            border-radius: 8px;
+            border: 1px solid #334155;
+            line-height: 1.7;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .log-entry { margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
+        
+        
+        .log-time { color: #94a3b8; font-size: 14px; margin-right: 12px; }
+        .log-success { color: #4ade80; font-weight: 600; } 
+        .log-alert { color: #f87171; font-weight: bold; font-size: 16px; } 
+        .log-info { color: #f8fafc; } 
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000000; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
+
 <body>
 
-    <div class="card">
-        <h2>📡 Pulsera Virtual VitalTrack</h2>
-        <p>Este panel inyecta datos médicos en tiempo real a Supabase.</p>
-        
-        <button id="btnStart" onclick="iniciarSimulador()">▶ Iniciar Transmisión</button>
-        <button id="btnStop" onclick="detenerSimulador()" disabled>⏹ Detener</button>
+    <div class="dashboard">
+        <div class="header">
+            <h2><i class="fas fa-microchip"></i> Emulador IoT VitalTrack</h2>
+            <div id="statusBadge" class="status-badge">
+                <span class="dot"></span>
+                <span id="statusText">Sistema Inactivo</span>
+            </div>
+        </div>
 
-        <div id="log">Esperando para iniciar...<br></div>
+        <div class="controls">
+            <button id="btnStart" onclick="iniciarSimulador()">
+                <i class="fas fa-play"></i> Iniciar Transmisión
+            </button>
+            <button id="btnStop" onclick="detenerSimulador()" disabled>
+                <i class="fas fa-stop"></i> Detener
+            </button>
+        </div>
+
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <span><i class="fas fa-terminal"></i> Salida de Datos (Consola)</span>
+                </div>
+            <div id="log">
+                <div class="log-info">Esperando inicialización del módulo IoT...</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 1. Tus llaves de conexión
         const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let intervaloTransmision;
         const logDiv = document.getElementById('log');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
 
-        function imprimirLog(mensaje) {
-            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${mensaje}<br>`;
-            logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll hacia abajo
+        function imprimirLog(mensaje, tipo = 'info') {
+            const time = new Date().toLocaleTimeString();
+            let claseCss = 'log-info';
+            if (tipo === 'success') claseCss = 'log-success';
+            if (tipo === 'alert') claseCss = 'log-alert';
+
+            const logHTML = `
+                <div class="log-entry">
+                    <span class="log-time">[${time}]</span>
+                    <span class="${claseCss}">${mensaje}</span>
+                </div>
+            `;
+            logDiv.innerHTML += logHTML;
+            logDiv.scrollTop = logDiv.scrollHeight; 
         }
 
         async function enviarDatosAleatorios() {
             try {
-                // Paso A: Obtener un paciente aleatorio de la base de datos
-                const { data: pacientes, error: errPacientes } = await _supabase.from('pacientes').select('id, nombre').limit(5);
-                if (errPacientes || !pacientes || pacientes.length === 0) {
-                    imprimirLog("❌ Error: No hay pacientes en la base de datos.");
+                const { data: pacientes, error: errPacientes } = await _supabase
+                    .from('pacientes')
+                    .select('id, nombre, status')
+                    .eq('status', 'Activo');
+
+                if (errPacientes) throw errPacientes;
+
+                if (!pacientes || pacientes.length === 0) {
+                    imprimirLog('<i class="fas fa-exclamation-triangle"></i> No hay pacientes Activos en la base de datos.', 'alert');
                     return;
                 }
-                
-                // Selecciona uno al azar
+
                 const pacienteMuestra = pacientes[Math.floor(Math.random() * pacientes.length)];
 
-                // Paso B: Generar Signos Vitales (Con posibilidad de generar alertas)
-                // 10% de probabilidad de generar una alerta de Ritmo Cardíaco (más de 100)
                 const generarAlerta = Math.random() > 0.90; 
                 const bpm = generarAlerta ? Math.floor(Math.random() * (120 - 101) + 101) : Math.floor(Math.random() * (95 - 65) + 65);
                 const spo2 = Math.floor(Math.random() * (100 - 92) + 92);
@@ -68,37 +277,52 @@
                     pasos: pasos
                 };
 
-                // Paso C: Insertar a Supabase
                 const { error } = await _supabase.from('signos_vitales').insert([nuevosSignos]);
 
                 if (error) throw error;
 
-                let mensaje = `✅ ${pacienteMuestra.nombre} | BPM: ${bpm} | SpO2: ${spo2}%`;
-                if (bpm > 100) mensaje = `🚨 ¡ALERTA! ${pacienteMuestra.nombre} | BPM ALTO: ${bpm}`;
-                
-                imprimirLog(mensaje);
+                let icono = '<i class="fas fa-check-circle"></i>';
+                let tipoLog = 'success';
+                let mensaje = `TX OK -> ID: ${pacienteMuestra.id.substring(0,4)}... | ${pacienteMuestra.nombre} | BPM: ${bpm} | SpO2: ${spo2}% | Temp: ${temperatura}°C`;
+
+                if (bpm > 100) {
+                    icono = '<i class="fas fa-heartbeat fa-beat"></i>';
+                    tipoLog = 'alert';
+                    mensaje = `ALERTA CRÍTICA -> ${pacienteMuestra.nombre} | TAQUICARDIA DETECTADA (BPM: ${bpm})`;
+                }
+
+                imprimirLog(`${icono} ${mensaje}`, tipoLog);
 
             } catch (error) {
-                imprimirLog(`❌ Error enviando datos: ${error.message}`);
+                imprimirLog(`<i class="fas fa-times-circle"></i> Error de transmisión: ${error.message}`, 'alert');
             }
         }
 
         function iniciarSimulador() {
             document.getElementById('btnStart').disabled = true;
             document.getElementById('btnStop').disabled = false;
-            imprimirLog("🚀 Transmisión iniciada. Enviando datos cada 4 segundos...");
             
-            // Envía el primer dato de inmediato y luego cada 4 segundos
-            enviarDatosAleatorios(); 
+            statusBadge.classList.add('active');
+            statusText.innerText = "Transmitiendo Datos...";
+            
+            imprimirLog("Inicializando conexión con Supabase...", 'info');
+            imprimirLog("Protocolo MQTT/HTTP simulado activado. Frecuencia: 4s.", 'info');
+
+            enviarDatosAleatorios();
             intervaloTransmision = setInterval(enviarDatosAleatorios, 4000);
         }
 
         function detenerSimulador() {
             document.getElementById('btnStart').disabled = false;
             document.getElementById('btnStop').disabled = true;
+            
+            statusBadge.classList.remove('active');
+            statusText.innerText = "Sistema Inactivo";
+
             clearInterval(intervaloTransmision);
-            imprimirLog("⏹ Transmisión detenida.");
+            imprimirLog("Transmisión interrumpida por el usuario.", 'alert');
         }
     </script>
 </body>
+
 </html>

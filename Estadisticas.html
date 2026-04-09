@@ -5,11 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Salud – VITALTRACK</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --navy: #1e3a8a;
@@ -22,9 +25,7 @@
             --danger: #dc2626;
         }
 
-        *,
-        *::before,
-        *::after {
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -73,8 +74,7 @@
             transition: color .2s;
         }
 
-        .app-bar a:hover,
-        .app-bar a.active {
+        .app-bar a:hover, .app-bar a.active {
             color: #fff;
             border-bottom-color: var(--navy-l);
         }
@@ -184,6 +184,7 @@
             text-decoration: none;
             font-size: 14px;
             transition: all .2s;
+            cursor: pointer;
         }
 
         .btn-back:hover {
@@ -203,20 +204,6 @@
             align-items: center;
         }
 
-        .footer {
-            background: var(--navy-d);
-            color: #c0d8ff;
-            padding: 30px 40px;
-            text-align: center;
-            margin-top: auto;
-        }
-
-        .footer-copy {
-            font-size: 12px;
-            color: #5b77a8;
-            margin-top: 8px;
-        }
-
         .filter-bar {
             background: var(--white);
             padding: 16px 24px;
@@ -226,6 +213,8 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: space-between;
         }
 
         .filter-bar input[type="date"] {
@@ -240,15 +229,14 @@
             border-color: var(--accent);
         }
 
-        
-        /* --- ESTILO ESTÁNDAR VITALTRACK (TIPO ALERTAS) --- */
         .table-container {
             background: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid #e5e7eb;
-            overflow: hidden; /* Asegura que los bordes redondeados se apliquen */
-            margin-top: 15px;
+            overflow: hidden; 
+            margin-top: 40px;
+            margin-bottom: 40px;
         }
 
         .table-header {
@@ -310,6 +298,20 @@
             padding: 40px 20px !important;
             color: #6b7280;
         }
+
+        .footer {
+            background: var(--navy-d);
+            color: #c0d8ff;
+            padding: 30px 40px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: #5b77a8;
+            margin-top: 8px;
+        }
     </style>
 </head>
 
@@ -327,8 +329,7 @@
 
     <header>
         <div class="top-bar">
-            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;"
-                onerror="this.style.display='none'">
+            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;" onerror="this.style.display='none'">
             <span class="brand-text">VITALTRACK</span>
         </div>
         <nav class="app-bar">
@@ -352,16 +353,20 @@
 
         <div class="info-box">
             <i class="bi bi-info-circle-fill" style="font-size: 18px;"></i>
-            <span>Los siguientes datos representan las <strong>desviaciones estándar</strong> y los <strong>promedios
-                    históricos</strong> calculados matemáticamente a partir de todo el registro de signos vitales del
-                paciente.</span>
+            <span>Los siguientes datos representan las <strong>desviaciones estándar</strong> y los <strong>promedios históricos</strong> calculados matemáticamente a partir del registro de signos vitales.</span>
         </div>
 
         <div class="filter-bar">
-            <label for="fecha-filtro" style="font-weight: 600; color: var(--navy);">Filtrar por fecha:</label>
-            <input type="date" id="fecha-filtro" onchange="filtrarPorFecha()">
-            <button class="btn-back" onclick="limpiarFiltro()" style="font-size: 12px; padding: 6px 12px;">Ver Histórico
-                Global</button>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <label for="fecha-filtro" style="font-weight: 600; color: var(--navy);">Filtrar por fecha:</label>
+                <input type="date" id="fecha-filtro" onchange="filtrarPorFecha()">
+                <button class="btn-back" onclick="limpiarFiltro()" style="font-size: 12px; padding: 6px 12px;">Ver Histórico Global</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="descargarExcel()" class="btn-back" style="background:#0284c7; color:white; border:none;"><i class="bi bi-file-earmark-excel-fill"></i> Descargar Excel</button>
+                <button onclick="descargarPDF()" class="btn-back" style="background:var(--danger); color:white; border:none;"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</button>
+            </div>
         </div>
 
         <div id="loading-message" style="text-align: center; padding: 40px; color: #6b7280;">
@@ -372,7 +377,7 @@
             <div class="stat-card">
                 <h3><i class="bi bi-heart-pulse-fill" style="color: var(--danger);"></i> Ritmo Cardíaco (BPM)</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Promedio Histórico</span>
+                    <span class="stat-label">Promedio</span>
                     <span class="stat-value" id="bpm-promedio">--</span>
                 </div>
                 <div class="stat-row">
@@ -380,15 +385,15 @@
                     <span class="stat-value" id="bpm-desviacion">--</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Total de Lecturas Evaluadas</span>
+                    <span class="stat-label">Total de Lecturas</span>
                     <span class="stat-value" id="bpm-total" style="font-size: 18px;">--</span>
                 </div>
             </div>
 
-<div class="stat-card accent">
+            <div class="stat-card accent">
                 <h3><i class="bi bi-lungs-fill" style="color: var(--accent);"></i> Oxigenación (SpO2 %)</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Promedio Histórico</span>
+                    <span class="stat-label">Promedio</span>
                     <span class="stat-value" id="oxi-promedio">--</span>
                 </div>
                 <div class="stat-row">
@@ -396,11 +401,13 @@
                     <span class="stat-value" id="oxi-desviacion">--</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Total de Lecturas Evaluadas</span>
+                    <span class="stat-label">Total de Lecturas</span>
                     <span class="stat-value" id="oxi-total" style="font-size: 18px;">--</span>
                 </div>
             </div>
-        </div> <div id="tabla-contenedor" style="display: none; margin-top: 40px; margin-bottom: 40px;">
+        </div>
+
+        <div id="tabla-contenedor" style="display: none;">
             <div class="table-container">
                 <div class="table-header">
                     <h3>
@@ -423,7 +430,10 @@
                 </div>
             </div>
         </div>
-        </div> <footer class="footer">
+
+    </div> 
+
+    <footer class="footer">
         <span style="font-family:'DM Serif Display',serif;font-size:18px;color:white;">VITALTRACK</span>
         <div class="footer-copy">&copy; 2025 Hospital's name – HNTEC-LTD</div>
     </footer>
@@ -431,116 +441,229 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const patientId = urlParams.get('id');
-        const TABLA_SIGNOS = 'signos_vitales'; // <-- Confirma que este sea el nombre de tu tabla de historial
+        const TABLA_SIGNOS = 'signos_vitales'; 
         
-        let todasLasLecturas = []; // Guardaremos todo aquí para no consultar a Supabase a cada rato
+        let todasLasLecturas = [];
+        let lecturasActuales = [];
+        let pacienteActual = null;
+        let fechaEtiqueta = "Global";
+        
+        let statsResumen = { bpmProm: '--', bpmDesv: '--', oxiProm: '--', oxiDesv: '--', total: 0 };
 
-    // Funciones Matemáticas
-    function calcularPromedio(arr) {
-        if (arr.length === 0) return 0;
-        return arr.reduce((a, b) => a + b, 0) / arr.length;
-    }
-    function calcularDesviacionEstandar(arr, promedio) {
-        if (arr.length === 0) return 0;
-        const varianza = arr.reduce((a, b) => a + Math.pow(b - promedio, 2), 0) / arr.length;
-        return Math.sqrt(varianza);
-    }
-
-    async function loadStats() {
-        if (!patientId) return;
-
-        // 1. Obtener datos del paciente
-        const { data: paciente } = await _supabase.from('pacientes').select('nombre, apellido').eq('id', patientId).single();
-        if (paciente) document.getElementById('patient-name').innerText = `Estadísticas de: ${paciente.nombre} ${paciente.apellido}`;
-
-        // 2. Obtener TODAS las lecturas (Aquí traemos created_at también)
-        const { data: lecturas, error } = await _supabase
-            .from(TABLA_SIGNOS)
-            .select('bpm, spo2, fecha_registro') 
-            .eq('paciente_id', patientId)
-            .order('fecha_registro', { ascending: false });
-
-        if (error) {
-            document.getElementById('loading-message').innerText = "Error: " + error.message;
-            return;
+        function calcularPromedio(arr) {
+            if (arr.length === 0) return 0;
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
         }
 
-        todasLasLecturas = lecturas || [];
-        
-        document.getElementById('loading-message').style.display = 'none';
-        document.getElementById('stats-container').style.display = 'grid';
-        document.getElementById('tabla-contenedor').style.display = 'block';
-
-        procesarDatos(todasLasLecturas, "Global");
-    }
-
-    function procesarDatos(lecturasAProcesar, etiquetaFecha) {
-        const bpmData = lecturasAProcesar.map(l => l.bpm).filter(val => typeof val === 'number');
-        const oxiData = lecturasAProcesar.map(l => l.spo2).filter(val => typeof val === 'number');
-
-        if(bpmData.length > 0 || oxiData.length > 0) {
-            document.getElementById('bpm-promedio').innerText = calcularPromedio(bpmData).toFixed(2);
-            document.getElementById('bpm-desviacion').innerText = '± ' + calcularDesviacionEstandar(bpmData, calcularPromedio(bpmData)).toFixed(2);
-            document.getElementById('bpm-total').innerText = bpmData.length;
-
-            document.getElementById('oxi-promedio').innerText = calcularPromedio(oxiData).toFixed(2) + '%';
-            document.getElementById('oxi-desviacion').innerText = '± ' + calcularDesviacionEstandar(oxiData, calcularPromedio(oxiData)).toFixed(2);
-            document.getElementById('oxi-total').innerText = oxiData.length;
-        } else {
-            // Si no hay datos para esa fecha
-            document.getElementById('bpm-promedio').innerText = "--";
-            document.getElementById('bpm-desviacion').innerText = "--";
-            document.getElementById('bpm-total').innerText = "0";
-            document.getElementById('oxi-promedio').innerText = "--";
-            document.getElementById('oxi-desviacion').innerText = "--";
-            document.getElementById('oxi-total').innerText = "0";
+        function calcularDesviacionEstandar(arr, promedio) {
+            if (arr.length === 0) return 0;
+            const varianza = arr.reduce((a, b) => a + Math.pow(b - promedio, 2), 0) / arr.length;
+            return Math.sqrt(varianza);
         }
 
-        // Llenar la tabla
-        document.getElementById('lbl-fecha').innerText = etiquetaFecha === "Global" ? " (Histórico Completo)" : ` del ${etiquetaFecha}`;
-        const tbody = document.getElementById('historial-body');
-        
-        if(lecturasAProcesar.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="empty-row"><i class="bi bi-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; color: #9ca3af;"></i>No hay lecturas registradas para esta fecha.</td></tr>`;
-            return;
+        function obtenerFechaLiteral(fechaSupabase) {
+            if (!fechaSupabase) return { fecha: '--', hora: '--', completa: '--' };
+            const limpia = String(fechaSupabase).replace('T', ' ').substring(0, 19);
+            const partes = limpia.split(' ');
+            const [ano, mes, dia] = partes[0].split('-');
+            
+            return {
+                fecha: `${dia}/${mes}/${ano}`,
+                hora: partes[1],
+                completa: `${dia}/${mes}/${ano}, ${partes[1]}`
+            };
         }
 
-        tbody.innerHTML = lecturasAProcesar.map(l => {
-            const fecha = new Date(l.fecha_registro).toLocaleString('es-ES');
-            return `<tr>
-                <td style="color:#6b7280;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="bi bi-clock-history"></i> ${fecha}
-                    </div>
-                </td>
-                <td><strong>${l.bpm || '--'}</strong> BPM</td>
-                <td><strong>${l.spo2 || '--'}</strong> %</td>
-            </tr>`;
-        }).join('');
-    }
+        async function loadStats() {
+            if (!patientId) return;
 
-    function filtrarPorFecha() {
-        const fechaSeleccionada = document.getElementById('fecha-filtro').value; // Formato YYYY-MM-DD
-        if (!fechaSeleccionada) return;
+            const { data: paciente } = await _supabase.from('pacientes').select('*').eq('id', patientId).single();
+            if (paciente) {
+                pacienteActual = paciente;
+                document.getElementById('patient-name').innerText = `Estadísticas de: ${paciente.nombre} ${paciente.apellido}`;
+            }
 
-        // Filtramos el arreglo que ya descargamos de Supabase (más rápido, sin gastar internet)
-        const lecturasFiltradas = todasLasLecturas.filter(l => {
-            if(!l.fecha_registro) return false;
-            // Extraer solo la parte YYYY-MM-DD de la fecha en la BD
-            const fechaBD = l.fecha_registro.split('T')[0]; 
-            return fechaBD === fechaSeleccionada;
-        });
+            const { data: lecturas, error } = await _supabase
+                .from(TABLA_SIGNOS)
+                .select('bpm, spo2, fecha_registro') 
+                .eq('paciente_id', patientId)
+                .order('fecha_registro', { ascending: false });
 
-        procesarDatos(lecturasFiltradas, fechaSeleccionada);
-    }
+            if (error) {
+                document.getElementById('loading-message').innerText = "Error: " + error.message;
+                return;
+            }
 
-    function limpiarFiltro() {
-        document.getElementById('fecha-filtro').value = '';
-        procesarDatos(todasLasLecturas, "Global");
-    }
+            todasLasLecturas = lecturas || [];
+            
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('stats-container').style.display = 'grid';
+            document.getElementById('tabla-contenedor').style.display = 'block';
 
-    document.addEventListener('DOMContentLoaded', loadStats);
+            procesarDatos(todasLasLecturas, "Global");
+        }
+
+        function procesarDatos(lecturasAProcesar, etiquetaFecha) {
+            lecturasActuales = lecturasAProcesar;
+            fechaEtiqueta = etiquetaFecha;
+            statsResumen.total = lecturasAProcesar.length;
+
+            const bpmData = lecturasAProcesar.map(l => l.bpm).filter(val => typeof val === 'number');
+            const oxiData = lecturasAProcesar.map(l => l.spo2).filter(val => typeof val === 'number');
+
+            if(bpmData.length > 0 || oxiData.length > 0) {
+                statsResumen.bpmProm = calcularPromedio(bpmData).toFixed(2);
+                statsResumen.bpmDesv = calcularDesviacionEstandar(bpmData, calcularPromedio(bpmData)).toFixed(2);
+                statsResumen.oxiProm = calcularPromedio(oxiData).toFixed(2);
+                statsResumen.oxiDesv = calcularDesviacionEstandar(oxiData, calcularPromedio(oxiData)).toFixed(2);
+
+                document.getElementById('bpm-promedio').innerText = statsResumen.bpmProm;
+                document.getElementById('bpm-desviacion').innerText = '± ' + statsResumen.bpmDesv;
+                document.getElementById('bpm-total').innerText = bpmData.length;
+
+                document.getElementById('oxi-promedio').innerText = statsResumen.oxiProm + '%';
+                document.getElementById('oxi-desviacion').innerText = '± ' + statsResumen.oxiDesv;
+                document.getElementById('oxi-total').innerText = oxiData.length;
+            } else {
+                statsResumen.bpmProm = '--';
+                statsResumen.bpmDesv = '--';
+                statsResumen.oxiProm = '--';
+                statsResumen.oxiDesv = '--';
+
+                document.getElementById('bpm-promedio').innerText = "--";
+                document.getElementById('bpm-desviacion').innerText = "--";
+                document.getElementById('bpm-total').innerText = "0";
+                document.getElementById('oxi-promedio').innerText = "--";
+                document.getElementById('oxi-desviacion').innerText = "--";
+                document.getElementById('oxi-total').innerText = "0";
+            }
+
+            document.getElementById('lbl-fecha').innerText = etiquetaFecha === "Global" ? " (Histórico Completo)" : ` del ${etiquetaFecha}`;
+            const tbody = document.getElementById('historial-body');
+            
+            if(lecturasAProcesar.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-row"><i class="bi bi-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; color: #9ca3af;"></i>No hay lecturas registradas para este periodo.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = lecturasAProcesar.map(l => {
+                const fechaText = obtenerFechaLiteral(l.fecha_registro).completa;
+                
+                return `<tr>
+                    <td style="color:#6b7280;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-clock-history"></i> ${fechaText}
+                        </div>
+                    </td>
+                    <td><strong>${l.bpm || '--'}</strong> BPM</td>
+                    <td><strong>${l.spo2 || '--'}</strong> %</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filtrarPorFecha() {
+            const fechaSeleccionada = document.getElementById('fecha-filtro').value; 
+            if (!fechaSeleccionada) return;
+
+            const lecturasFiltradas = todasLasLecturas.filter(l => {
+                if(!l.fecha_registro) return false;
+                const fechaLiteral = String(l.fecha_registro).substring(0, 10);
+                return fechaLiteral === fechaSeleccionada;
+            });
+
+            procesarDatos(lecturasFiltradas, fechaSeleccionada);
+        }
+
+        function limpiarFiltro() {
+            document.getElementById('fecha-filtro').value = '';
+            procesarDatos(todasLasLecturas, "Global");
+        }
+
+        function descargarExcel() {
+            if (!pacienteActual) return;
+            if (lecturasActuales.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            const datosExcel = lecturasActuales.map(l => {
+                const formato = obtenerFechaLiteral(l.fecha_registro);
+                return {
+                    "Fecha": formato.fecha,
+                    "Hora": formato.hora,
+                    "Ritmo Cardíaco (BPM)": l.bpm || "N/A",
+                    "SpO2 (%)": l.spo2 || "N/A"
+                };
+            });
+
+            datosExcel.push({});
+            datosExcel.push({ "Fecha": "RESUMEN ESTADÍSTICO" });
+            datosExcel.push({ "Fecha": "Periodo analizado:", "Hora": fechaEtiqueta === "Global" ? "Histórico Completo" : fechaEtiqueta });
+            datosExcel.push({ "Fecha": "Total Lecturas:", "Hora": statsResumen.total });
+            datosExcel.push({ "Fecha": "Promedio BPM:", "Hora": statsResumen.bpmProm });
+            datosExcel.push({ "Fecha": "Desviación Est. BPM:", "Hora": statsResumen.bpmDesv });
+            datosExcel.push({ "Fecha": "Promedio SpO2 (%):", "Hora": statsResumen.oxiProm });
+            datosExcel.push({ "Fecha": "Desviación Est. SpO2:", "Hora": statsResumen.oxiDesv });
+
+            const hoja = XLSX.utils.json_to_sheet(datosExcel);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Estadisticas");
+
+            XLSX.writeFile(libro, `Estadisticas_${pacienteActual.nombre}_${fechaEtiqueta}.xlsx`);
+        }
+
+        function descargarPDF() {
+            if (!pacienteActual) return;
+            if (lecturasActuales.length === 0) {
+                alert("No hay datos para exportar en el periodo seleccionado.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(30, 58, 138);
+            doc.text("Reporte Estadístico de Salud - VITALTRACK", 14, 20);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Paciente: ${pacienteActual.nombre} ${pacienteActual.apellido}`, 14, 30);
+            doc.text(`Periodo: ${fechaEtiqueta === "Global" ? "Histórico Completo" : fechaEtiqueta}`, 14, 36);
+            doc.text(`Total de lecturas: ${statsResumen.total}`, 14, 42);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Resumen Estadístico:", 14, 52);
+            doc.setFont("helvetica", "normal");
+            doc.text(`- Ritmo Cardíaco (BPM): Promedio ${statsResumen.bpmProm} | Desviación ±${statsResumen.bpmDesv}`, 14, 58);
+            doc.text(`- Oxigenación (SpO2%): Promedio ${statsResumen.oxiProm}% | Desviación ±${statsResumen.oxiDesv}`, 14, 64);
+
+            const filas = lecturasActuales.map(l => {
+                const formato = obtenerFechaLiteral(l.fecha_registro);
+                return [
+                    formato.completa,
+                    `${l.bpm || '--'} BPM`,
+                    `${l.spo2 || '--'} %`
+                ];
+            });
+
+            doc.autoTable({
+                startY: 72,
+                head: [['Fecha y Hora', 'Ritmo Cardíaco (BPM)', 'Oxigenación (SpO2%)']],
+                body: filas,
+                theme: 'striped',
+                headStyles: { fillColor: [30, 58, 138] },
+                styles: { fontSize: 10, cellPadding: 3 }
+            });
+
+            doc.save(`Estadisticas_${pacienteActual.nombre}_${fechaEtiqueta}.pdf`);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadStats);
     </script>
-<script src="alertas-globales.js"></script>
+    <script src="alertas-globales.js"></script>
 </body>
+
 </html>
