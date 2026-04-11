@@ -5,14 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Salud – VITALTRACK</title>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --navy: #1e3a8a;
@@ -25,7 +27,9 @@
             --danger: #dc2626;
         }
 
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -74,7 +78,8 @@
             transition: color .2s;
         }
 
-        .app-bar a:hover, .app-bar a.active {
+        .app-bar a:hover,
+        .app-bar a.active {
             color: #fff;
             border-bottom-color: var(--navy-l);
         }
@@ -234,7 +239,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid #e5e7eb;
-            overflow: hidden; 
+            overflow: hidden;
             margin-top: 40px;
             margin-bottom: 40px;
         }
@@ -329,7 +334,8 @@
 
     <header>
         <div class="top-bar">
-            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;" onerror="this.style.display='none'">
+            <img src="assets/img/Logo.png" alt="Logo" style="width:36px;border-radius:8px;"
+                onerror="this.style.display='none'">
             <span class="brand-text">VITALTRACK</span>
         </div>
         <nav class="app-bar">
@@ -353,19 +359,25 @@
 
         <div class="info-box">
             <i class="bi bi-info-circle-fill" style="font-size: 18px;"></i>
-            <span>Los siguientes datos representan las <strong>desviaciones estándar</strong> y los <strong>promedios históricos</strong> calculados matemáticamente a partir del registro de signos vitales.</span>
+            <span>Los siguientes datos representan las <strong>desviaciones estándar</strong> y los <strong>promedios
+                    históricos</strong> calculados matemáticamente a partir del registro de signos vitales.</span>
         </div>
 
         <div class="filter-bar">
             <div style="display: flex; gap: 15px; align-items: center;">
                 <label for="fecha-filtro" style="font-weight: 600; color: var(--navy);">Filtrar por fecha:</label>
                 <input type="date" id="fecha-filtro" onchange="filtrarPorFecha()">
-                <button class="btn-back" onclick="limpiarFiltro()" style="font-size: 12px; padding: 6px 12px;">Ver Histórico Global</button>
+                <button class="btn-back" onclick="limpiarFiltro()" style="font-size: 12px; padding: 6px 12px;">Ver
+                    Histórico Global</button>
             </div>
-            
+
             <div style="display: flex; gap: 10px;">
-                <button onclick="descargarExcel()" class="btn-back" style="background:#0284c7; color:white; border:none;"><i class="bi bi-file-earmark-excel-fill"></i> Descargar Excel</button>
-                <button onclick="descargarPDF()" class="btn-back" style="background:var(--danger); color:white; border:none;"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</button>
+                <button onclick="descargarExcel()" class="btn-back"
+                    style="background:#0284c7; color:white; border:none;"><i class="bi bi-file-earmark-excel-fill"></i>
+                    Descargar Excel</button>
+                <button onclick="descargarPDF()" class="btn-back"
+                    style="background:var(--danger); color:white; border:none;"><i
+                        class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</button>
             </div>
         </div>
 
@@ -411,8 +423,9 @@
             <div class="table-container">
                 <div class="table-header">
                     <h3>
-                        <i class="bi bi-clipboard2-pulse"></i> Registro de Lecturas 
-                        <span id="lbl-fecha" style="font-family: 'DM Sans', sans-serif; font-size: 15px; color: #6b7280; font-weight: 500; margin-left: 8px;"></span>
+                        <i class="bi bi-clipboard2-pulse"></i> Registro de Lecturas
+                        <span id="lbl-fecha"
+                            style="font-family: 'DM Sans', sans-serif; font-size: 15px; color: #6b7280; font-weight: 500; margin-left: 8px;"></span>
                     </h3>
                 </div>
                 <div style="overflow-x: auto;">
@@ -431,7 +444,7 @@
             </div>
         </div>
 
-    </div> 
+    </div>
 
     <footer class="footer">
         <span style="font-family:'DM Serif Display',serif;font-size:18px;color:white;">VITALTRACK</span>
@@ -441,13 +454,13 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const patientId = urlParams.get('id');
-        const TABLA_SIGNOS = 'signos_vitales'; 
-        
+        const TABLA_SIGNOS = 'signos_vitales';
+
         let todasLasLecturas = [];
         let lecturasActuales = [];
         let pacienteActual = null;
         let fechaEtiqueta = "Global";
-        
+
         let statsResumen = { bpmProm: '--', bpmDesv: '--', oxiProm: '--', oxiDesv: '--', total: 0 };
 
         function calcularPromedio(arr) {
@@ -463,14 +476,18 @@
 
         function obtenerFechaLiteral(fechaSupabase) {
             if (!fechaSupabase) return { fecha: '--', hora: '--', completa: '--' };
-            const limpia = String(fechaSupabase).replace('T', ' ').substring(0, 19);
-            const partes = limpia.split(' ');
-            const [ano, mes, dia] = partes[0].split('-');
-            
+
+            // Convertimos el registro a un objeto Date real
+            const dateObj = new Date(fechaSupabase);
+
+            // Forzamos la zona horaria UTC para que nunca reste las horas locales
+            const fecha = dateObj.toLocaleDateString('es-ES', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+            const hora = dateObj.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
             return {
-                fecha: `${dia}/${mes}/${ano}`,
-                hora: partes[1],
-                completa: `${dia}/${mes}/${ano}, ${partes[1]}`
+                fecha: fecha,
+                hora: hora,
+                completa: `${fecha}, ${hora}`
             };
         }
 
@@ -485,7 +502,7 @@
 
             const { data: lecturas, error } = await _supabase
                 .from(TABLA_SIGNOS)
-                .select('bpm, spo2, fecha_registro') 
+                .select('bpm, spo2, fecha_registro')
                 .eq('paciente_id', patientId)
                 .order('fecha_registro', { ascending: false });
 
@@ -495,7 +512,7 @@
             }
 
             todasLasLecturas = lecturas || [];
-            
+
             document.getElementById('loading-message').style.display = 'none';
             document.getElementById('stats-container').style.display = 'grid';
             document.getElementById('tabla-contenedor').style.display = 'block';
@@ -511,7 +528,7 @@
             const bpmData = lecturasAProcesar.map(l => l.bpm).filter(val => typeof val === 'number');
             const oxiData = lecturasAProcesar.map(l => l.spo2).filter(val => typeof val === 'number');
 
-            if(bpmData.length > 0 || oxiData.length > 0) {
+            if (bpmData.length > 0 || oxiData.length > 0) {
                 statsResumen.bpmProm = calcularPromedio(bpmData).toFixed(2);
                 statsResumen.bpmDesv = calcularDesviacionEstandar(bpmData, calcularPromedio(bpmData)).toFixed(2);
                 statsResumen.oxiProm = calcularPromedio(oxiData).toFixed(2);
@@ -540,15 +557,15 @@
 
             document.getElementById('lbl-fecha').innerText = etiquetaFecha === "Global" ? " (Histórico Completo)" : ` del ${etiquetaFecha}`;
             const tbody = document.getElementById('historial-body');
-            
-            if(lecturasAProcesar.length === 0) {
+
+            if (lecturasAProcesar.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3" class="empty-row"><i class="bi bi-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; color: #9ca3af;"></i>No hay lecturas registradas para este periodo.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = lecturasAProcesar.map(l => {
                 const fechaText = obtenerFechaLiteral(l.fecha_registro).completa;
-                
+
                 return `<tr>
                     <td style="color:#6b7280;">
                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -562,17 +579,27 @@
         }
 
         function filtrarPorFecha() {
-            const fechaSeleccionada = document.getElementById('fecha-filtro').value; 
-            if (!fechaSeleccionada) return;
+    const fechaSeleccionada = document.getElementById('fecha-filtro').value; 
+    if (!fechaSeleccionada) return;
 
-            const lecturasFiltradas = todasLasLecturas.filter(l => {
-                if(!l.fecha_registro) return false;
-                const fechaLiteral = String(l.fecha_registro).substring(0, 10);
-                return fechaLiteral === fechaSeleccionada;
-            });
+    const lecturasFiltradas = todasLasLecturas.filter(l => {
+        if(!l.fecha_registro) return false;
+        
+        const dateObj = new Date(l.fecha_registro);
+        
+        // Extraemos Año, Mes y Día forzando UTC para armar el formato YYYY-MM-DD
+        const yyyy = dateObj.toLocaleString('en-US', { timeZone: 'UTC', year: 'numeric' });
+        const mm = dateObj.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit' });
+        const dd = dateObj.toLocaleString('en-US', { timeZone: 'UTC', day: '2-digit' });
+        
+        const fechaUTC = `${yyyy}-${mm}-${dd}`;
 
-            procesarDatos(lecturasFiltradas, fechaSeleccionada);
-        }
+        // Ahora comparamos peras con peras en la misma zona horaria
+        return fechaUTC === fechaSeleccionada;
+    });
+
+    procesarDatos(lecturasFiltradas, fechaSeleccionada);
+}
 
         function limpiarFiltro() {
             document.getElementById('fecha-filtro').value = '';

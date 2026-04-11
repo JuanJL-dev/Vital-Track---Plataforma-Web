@@ -178,11 +178,11 @@
 
         .log-entry { margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
         
-        
         .log-time { color: #94a3b8; font-size: 14px; margin-right: 12px; }
         .log-success { color: #4ade80; font-weight: 600; } 
         .log-alert { color: #f87171; font-weight: bold; font-size: 16px; } 
         .log-info { color: #f8fafc; } 
+        .log-separator { color: #334155; text-align: center; font-size: 12px; padding: 5px 0; }
         
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: #000000; border-radius: 4px; }
@@ -214,7 +214,7 @@
         <div class="terminal-container">
             <div class="terminal-header">
                 <span><i class="fas fa-terminal"></i> Salida de Datos (Consola)</span>
-                </div>
+            </div>
             <div id="log">
                 <div class="log-info">Esperando inicialización del módulo IoT...</div>
             </div>
@@ -231,24 +231,68 @@
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
 
+        let memoriaPasos = {}; 
+        let diaActual = new Date().toDateString(); 
+
         function imprimirLog(mensaje, tipo = 'info') {
             const time = new Date().toLocaleTimeString();
             let claseCss = 'log-info';
+            
             if (tipo === 'success') claseCss = 'log-success';
             if (tipo === 'alert') claseCss = 'log-alert';
+            if (tipo === 'separator') claseCss = 'log-separator';
 
-            const logHTML = `
-                <div class="log-entry">
+            const logHTML = tipo === 'separator' 
+                ? `<div class="log-entry ${claseCss}">${mensaje}</div>`
+                : `<div class="log-entry">
                     <span class="log-time">[${time}]</span>
                     <span class="${claseCss}">${mensaje}</span>
-                </div>
-            `;
+                   </div>`;
+                   
             logDiv.innerHTML += logHTML;
             logDiv.scrollTop = logDiv.scrollHeight; 
         }
 
+        async function sincronizarPasosDesdeBD() {
+            try {
+                const { data: pacientes } = await _supabase.from('pacientes').select('id').eq('status', 'Activo');
+                
+                if (pacientes) {
+                    for (const paciente of pacientes) {
+                        const { data } = await _supabase.from('signos_vitales')
+                            .select('pasos, created_at')
+                            .eq('paciente_id', paciente.id)
+                            .order('created_at', { ascending: false })
+                            .limit(1);
+
+                        if (data && data.length > 0) {
+                            const ultimoRegistro = data[0];
+                            const fechaRegistro = new Date(ultimoRegistro.created_at).toDateString();
+                            
+                            if (fechaRegistro === diaActual) {
+                                memoriaPasos[paciente.id] = ultimoRegistro.pasos || 0;
+                            } else {
+                                memoriaPasos[paciente.id] = 0;
+                            }
+                        } else {
+                            memoriaPasos[paciente.id] = 0;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error sincronizando pasos:", error);
+            }
+        }
+
         async function enviarDatosAleatorios() {
             try {
+                const diaComprobacion = new Date().toDateString();
+                if (diaComprobacion !== diaActual) {
+                    imprimirLog('<i class="fas fa-calendar-day"></i> Nuevo día detectado: Reiniciando contadores de pasos a 0', 'info');
+                    memoriaPasos = {}; 
+                    diaActual = diaComprobacion; 
+                }
+
                 const { data: pacientes, error: errPacientes } = await _supabase
                     .from('pacientes')
                     .select('id, nombre, status')
@@ -261,55 +305,114 @@
                     return;
                 }
 
-                const pacienteMuestra = pacientes[Math.floor(Math.random() * pacientes.length)];
+                const nuevosSignosArray = [];
+                const logsTemporales = [];
 
-                const generarAlerta = Math.random() > 0.90; 
-                const bpm = generarAlerta ? Math.floor(Math.random() * (120 - 101) + 101) : Math.floor(Math.random() * (95 - 65) + 65);
-                const spo2 = Math.floor(Math.random() * (100 - 92) + 92);
-                const temperatura = (Math.random() * (37.2 - 36.1) + 36.1).toFixed(1);
-                const pasos = Math.floor(Math.random() * 5);
+                pacientes.forEach(paciente => {
+                    let bpm, spo2, temperatura;
+                    
+                    // Lógica médica del simulador (15% de probabilidad de tener un signo anormal)
+                    const probabilidadAnomalia = Math.random();
 
-                const nuevosSignos = {
-                    paciente_id: pacienteMuestra.id,
-                    bpm: bpm,
-                    spo2: spo2,
-                    temperatura: temperatura,
-                    pasos: pasos
-                };
+                    if (probabilidadAnomalia > 0.85) {
+                        // Generar una anomalía aleatoria
+                        const tipoAnomalia = Math.floor(Math.random() * 5);
+                        if (tipoAnomalia === 0) { // BPM Alto (Taquicardia)
+                            bpm = Math.floor(Math.random() * (125 - 105) + 105);
+                            spo2 = Math.floor(Math.random() * (99 - 94) + 94);
+                            temperatura = (Math.random() * (37.3 - 36.1) + 36.1).toFixed(1);
+                        } else if (tipoAnomalia === 1) { // BPM Bajo (Bradicardia)
+                            bpm = Math.floor(Math.random() * (55 - 40) + 40);
+                            spo2 = Math.floor(Math.random() * (99 - 94) + 94);
+                            temperatura = (Math.random() * (37.1 - 36.1) + 36.1).toFixed(1);
+                        } else if (tipoAnomalia === 2) { // SpO2 Crítico (Hipoxia)
+                            bpm = Math.floor(Math.random() * (110 - 80) + 80); // Frecuencia sube al faltar oxígeno
+                            spo2 = Math.floor(Math.random() * (88 - 80) + 80);
+                            temperatura = (Math.random() * (37.1 - 36.1) + 36.1).toFixed(1);
+                        } else if (tipoAnomalia === 3) { // Temperatura Alta (Fiebre)
+                            bpm = Math.floor(Math.random() * (110 - 90) + 90); 
+                            spo2 = Math.floor(Math.random() * (99 - 94) + 94);
+                            temperatura = (Math.random() * (39.5 - 37.8) + 37.8).toFixed(1);
+                        } else { // Temperatura Baja (Hipotermia)
+                            bpm = Math.floor(Math.random() * (60 - 45) + 45); 
+                            spo2 = Math.floor(Math.random() * (99 - 94) + 94);
+                            temperatura = (Math.random() * (35.5 - 34.0) + 34.0).toFixed(1);
+                        }
+                    } else {
+                        // Valores Médicamente Normales
+                        bpm = Math.floor(Math.random() * (95 - 65) + 65);
+                        spo2 = Math.floor(Math.random() * (100 - 92) + 92);
+                        temperatura = (Math.random() * (37.4 - 36.1) + 36.1).toFixed(1);
+                    }
 
-                const { error } = await _supabase.from('signos_vitales').insert([nuevosSignos]);
+                    if (memoriaPasos[paciente.id] === undefined) {
+                        memoriaPasos[paciente.id] = 0;
+                    }
+
+                    // Sumamos entre 0 y 6 pasos por ciclo
+                    const pasosNuevos = Math.floor(Math.random() * 7); 
+                    memoriaPasos[paciente.id] += pasosNuevos;
+                    const pasosTotales = memoriaPasos[paciente.id];
+
+                    nuevosSignosArray.push({
+                        paciente_id: paciente.id,
+                        bpm: bpm,
+                        spo2: spo2,
+                        temperatura: temperatura,
+                        pasos: pasosTotales
+                    });
+
+                    // Validar anomalías para los logs de la consola del simulador
+                    let alertasGeneradas = [];
+                    if (bpm > 100) alertasGeneradas.push(`Taquicardia (${bpm} bpm)`);
+                    if (bpm < 60) alertasGeneradas.push(`Bradicardia (${bpm} bpm)`);
+                    if (spo2 < 90) alertasGeneradas.push(`Hipoxia (${spo2}%)`);
+                    if (temperatura > 37.5) alertasGeneradas.push(`Fiebre (${temperatura}°C)`);
+                    if (temperatura < 36.0) alertasGeneradas.push(`Hipotermia (${temperatura}°C)`);
+
+                    let icono = '<i class="fas fa-check-circle"></i>';
+                    let tipoLog = 'success';
+                    let mensaje = `TX OK -> ${paciente.nombre} | BPM: ${bpm} | SpO2: ${spo2}% | Temp: ${temperatura}°C | Pasos: ${pasosTotales}`;
+
+                    if (alertasGeneradas.length > 0) {
+                        icono = '<i class="fas fa-exclamation-triangle fa-beat" style="color: #ef4444;"></i>';
+                        tipoLog = 'alert';
+                        mensaje = `ALERTA MÉDICA -> ${paciente.nombre} | ${alertasGeneradas.join(' - ')}`;
+                    }
+
+                    logsTemporales.push({ mensaje: `${icono} ${mensaje}`, tipo: tipoLog });
+                });
+
+                const { error } = await _supabase.from('signos_vitales').insert(nuevosSignosArray);
 
                 if (error) throw error;
 
-                let icono = '<i class="fas fa-check-circle"></i>';
-                let tipoLog = 'success';
-                let mensaje = `TX OK -> ID: ${pacienteMuestra.id.substring(0,4)}... | ${pacienteMuestra.nombre} | BPM: ${bpm} | SpO2: ${spo2}% | Temp: ${temperatura}°C`;
-
-                if (bpm > 100) {
-                    icono = '<i class="fas fa-heartbeat fa-beat"></i>';
-                    tipoLog = 'alert';
-                    mensaje = `ALERTA CRÍTICA -> ${pacienteMuestra.nombre} | TAQUICARDIA DETECTADA (BPM: ${bpm})`;
-                }
-
-                imprimirLog(`${icono} ${mensaje}`, tipoLog);
+                logsTemporales.forEach(log => imprimirLog(log.mensaje, log.tipo));
+                imprimirLog('---------------- Ciclo de transmisión completado ----------------', 'separator');
 
             } catch (error) {
                 imprimirLog(`<i class="fas fa-times-circle"></i> Error de transmisión: ${error.message}`, 'alert');
             }
         }
 
-        function iniciarSimulador() {
+        async function iniciarSimulador() {
             document.getElementById('btnStart').disabled = true;
-            document.getElementById('btnStop').disabled = false;
-            
             statusBadge.classList.add('active');
-            statusText.innerText = "Transmitiendo Datos...";
+            statusText.innerText = "Preparando...";
             
             imprimirLog("Inicializando conexión con Supabase...", 'info');
-            imprimirLog("Protocolo MQTT/HTTP simulado activado. Frecuencia: 4s.", 'info');
+            imprimirLog("Sincronizando historial de pasos desde la base de datos...", 'info');
+            
+            await sincronizarPasosDesdeBD();
+            
+            imprimirLog("Historial recuperado. Protocolo de transmisión activado a 15 segundos.", 'success');
+            
+            statusText.innerText = "Transmitiendo Datos...";
+            document.getElementById('btnStop').disabled = false;
 
             enviarDatosAleatorios();
-            intervaloTransmision = setInterval(enviarDatosAleatorios, 4000);
+            // AQUI ESTÁ EL CAMBIO A 15 SEGUNDOS (50000 ms)
+            intervaloTransmision = setInterval(enviarDatosAleatorios, 50000); 
         }
 
         function detenerSimulador() {

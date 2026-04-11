@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,63 +8,126 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --navy: #1e3a8a; --navy-d: #122149; --navy-l: #c0d8ff;
-            --accent: #3b82f6; --bg: #f0f2f5; --white: #fff;
-            --danger: #dc2626; --warn: #d97706; --ok: #16a34a;
+            --navy: #1e3a8a;
+            --navy-d: #122149;
+            --navy-l: #c0d8ff;
+            --accent: #3b82f6;
+            --bg: #f0f2f5;
+            --white: #fff;
+            --danger: #dc2626;
+            --warn: #d97706;
+            --ok: #16a34a;
         }
-        *, *::before, *::after { box-sizing: border-box; }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--bg);
-            margin: 0; padding: 0; color: #1a1a2e;
-            display: flex; flex-direction: column; min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        /* ── Header ── */
+
         .top-bar {
             background: var(--white);
             padding: 14px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
-            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .brand-text { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--navy); letter-spacing: 1px; }
-        .brand img { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; }
 
-        .profile-wrap { position: relative; cursor: pointer; }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--navy);
+            letter-spacing: 1px;
+        }
+
+        .brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .profile-wrap {
+            position: relative;
+            cursor: pointer;
+        }
+
         .profile-pic {
-            width: 42px; height: 42px; border-radius: 50%;
-            border: 2px solid var(--navy-l); object-fit: cover;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--navy-l);
+            object-fit: cover;
             transition: border-color .2s;
         }
-        .profile-pic:hover { border-color: var(--accent); }
-        #file-input { display: none; }
+
+        .profile-pic:hover {
+            border-color: var(--accent);
+        }
+
+        #file-input {
+            display: none;
+        }
 
         .app-bar {
             background: linear-gradient(90deg, var(--navy-d), var(--navy));
             padding: 0 40px;
-            display: flex; justify-content: center;
+            display: flex;
+            justify-content: center;
         }
-        .app-bar nav { display: flex; gap: 6px; }
+
+        .app-bar nav {
+            display: flex;
+            gap: 6px;
+        }
+
         .app-bar a {
-            color: rgba(255,255,255,.8);
+            color: rgba(255, 255, 255, .8);
             text-decoration: none;
             padding: 14px 18px;
-            font-size: 14px; font-weight: 500;
+            font-size: 14px;
+            font-weight: 500;
             transition: color .2s, background .2s;
             border-bottom: 3px solid transparent;
             letter-spacing: .2px;
         }
-        .app-bar a:hover { color: #fff; }
-        .app-bar a.active { color: #fff; border-bottom-color: var(--navy-l); }
 
-        /* ── Hero ── */
+        .app-bar a:hover {
+            color: #fff;
+        }
+
+        .app-bar a.active {
+            color: #fff;
+            border-bottom-color: var(--navy-l);
+        }
+
         .hero-section {
             background: linear-gradient(135deg, var(--navy-d) 0%, var(--navy) 60%, #1d4ed8 100%);
             color: white;
@@ -71,96 +135,211 @@
             position: relative;
             overflow: hidden;
         }
+
         .hero-section::after {
             content: '';
-            position: absolute; top: -60px; right: -60px;
-            width: 300px; height: 300px;
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 300px;
+            height: 300px;
             border-radius: 50%;
-            background: rgba(255,255,255,.04);
+            background: rgba(255, 255, 255, .04);
             pointer-events: none;
         }
-        .hero-section .container { position: relative; z-index: 1; }
-        .hero-section h1 { font-family: 'DM Serif Display', serif; font-size: 2.4rem; font-weight: normal; margin-bottom: 8px; }
-        .hero-section h1 span { color: var(--navy-l); }
-        .hero-section p { color: rgba(255,255,255,.75); font-size: 1rem; margin-bottom: 20px; max-width: 550px; }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-section h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.4rem;
+            font-weight: normal;
+            margin-bottom: 8px;
+        }
+
+        .hero-section h1 span {
+            color: var(--navy-l);
+        }
+
+        .hero-section p {
+            color: rgba(255, 255, 255, .75);
+            font-size: 1rem;
+            margin-bottom: 20px;
+            max-width: 550px;
+        }
+
         .hero-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(220,38,38,.25);
-            border: 1px solid rgba(220,38,38,.5);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(220, 38, 38, .25);
+            border: 1px solid rgba(220, 38, 38, .5);
             color: #fca5a5;
             border-radius: 20px;
             padding: 5px 14px;
-            font-size: 13px; font-weight: 600;
+            font-size: 13px;
+            font-weight: 600;
             margin-bottom: 24px;
         }
+
         .hero-badge.no-alerts {
-            background: rgba(22,163,74,.2);
-            border-color: rgba(22,163,74,.4);
+            background: rgba(22, 163, 74, .2);
+            border-color: rgba(22, 163, 74, .4);
             color: #86efac;
         }
-        .hero-badge i { font-size: 12px; }
 
-        /* ── Realtime alert toast ── */
+        .hero-badge i {
+            font-size: 12px;
+        }
+
         #toast-container {
             position: fixed;
-            top: 80px; right: 24px;
+            top: 80px;
+            right: 24px;
             z-index: 9999;
-            display: flex; flex-direction: column; gap: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             max-width: 360px;
         }
+
         .toast-alert {
             background: #fff;
             border-left: 4px solid var(--danger);
             border-radius: 10px;
             padding: 14px 18px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.12);
-            display: flex; gap: 12px; align-items: flex-start;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
             animation: toastIn .35s ease both;
         }
-        .toast-alert.warning { border-left-color: var(--warn); }
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateX(30px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        .toast-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-        .toast-icon.danger { color: var(--danger); }
-        .toast-icon.warning { color: var(--warn); }
-        .toast-title { font-size: 13px; font-weight: 700; color: #1a1a2e; }
-        .toast-body  { font-size: 12px; color: #555; margin-top: 2px; }
-        .toast-close {
-            margin-left: auto; background: none; border: none;
-            color: #aaa; cursor: pointer; font-size: 16px; line-height: 1;
+
+        .toast-alert.warning {
+            border-left-color: var(--warn);
         }
 
-        /* ── Stats row ── */
-        .stats-row { display: flex; gap: 16px; flex-wrap: wrap; padding: 28px 40px 0; }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .toast-icon.danger {
+            color: var(--danger);
+        }
+
+        .toast-icon.warning {
+            color: var(--warn);
+        }
+
+        .toast-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .toast-body {
+            font-size: 12px;
+            color: #555;
+            margin-top: 2px;
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 28px 40px 0;
+        }
+
         .stat-card {
-            flex: 1; min-width: 160px;
+            flex: 1;
+            min-width: 160px;
             background: var(--white);
             border-radius: 14px;
             padding: 22px 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.05);
-            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
-        .stat-icon {
-            width: 48px; height: 48px;
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; flex-shrink: 0;
-        }
-        .stat-icon.blue  { background: rgba(30,58,138,.1); color: var(--navy); }
-        .stat-icon.red   { background: rgba(220,38,38,.1); color: var(--danger); }
-        .stat-icon.green { background: rgba(22,163,74,.1);  color: var(--ok); }
-        .stat-icon.amber { background: rgba(217,119,6,.1);  color: var(--warn); }
-        .stat-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--navy); line-height: 1; }
-        .stat-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
 
-        /* ── Content ── */
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue {
+            background: rgba(30, 58, 138, .1);
+            color: var(--navy);
+        }
+
+        .stat-icon.red {
+            background: rgba(220, 38, 38, .1);
+            color: var(--danger);
+        }
+
+        .stat-icon.green {
+            background: rgba(22, 163, 74, .1);
+            color: var(--ok);
+        }
+
+        .stat-icon.amber {
+            background: rgba(217, 119, 6, .1);
+            color: var(--warn);
+        }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            color: var(--navy);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
         .content-section {
             padding: 30px 40px;
             max-width: 1240px;
-            margin: 0 auto; width: 100%;
+            margin: 0 auto;
+            width: 100%;
         }
+
         .section-heading {
             font-family: 'DM Serif Display', serif;
             font-size: 1.6rem;
@@ -169,53 +348,107 @@
             font-weight: normal;
         }
 
-        /* Action cards */
         .action-card {
             background: var(--white);
             border-radius: 14px;
             padding: 28px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
             transition: transform .2s, box-shadow .2s;
-            text-decoration: none; color: inherit;
+            text-decoration: none;
+            color: inherit;
             display: block;
         }
+
         .action-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,.09);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .09);
             color: inherit;
         }
+
         .ac-icon {
-            width: 52px; height: 52px;
-            background: rgba(30,58,138,.08);
+            width: 52px;
+            height: 52px;
+            background: rgba(30, 58, 138, .08);
             border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--navy);
             margin-bottom: 14px;
         }
-        .action-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-        .action-card p  { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.5; }
 
-        /* Alert items */
+        .action-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .action-card p {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.5;
+        }
+
         .alert-item {
             background: var(--white);
             border-left: 4px solid var(--danger);
             border-radius: 10px;
             padding: 18px 22px;
             margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.04);
-            display: flex; align-items: flex-start; gap: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
             transition: opacity 0.3s ease;
         }
-        .alert-item.warning { border-left-color: var(--warn); }
-        .alert-item.info    { border-left-color: #6b7280; }
-        .alert-item-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-        .alert-item.danger .alert-item-icon { color: var(--danger); }
-        .alert-item.warning .alert-item-icon { color: var(--warn); }
-        .alert-item.info    .alert-item-icon { color: #6b7280; }
-        .alert-item h4 { font-size: 14px; font-weight: 700; margin: 0 0 3px; }
-        .alert-item p  { font-size: 13px; color: #555; margin: 0; }
-        .alert-time { margin-left: auto; font-size: 11px; color: #aaa; flex-shrink: 0; }
-        
+
+        .alert-item.warning {
+            border-left-color: var(--warn);
+        }
+
+        .alert-item.info {
+            border-left-color: #6b7280;
+        }
+
+        .alert-item-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .alert-item.danger .alert-item-icon {
+            color: var(--danger);
+        }
+
+        .alert-item.warning .alert-item-icon {
+            color: var(--warn);
+        }
+
+        .alert-item.info .alert-item-icon {
+            color: #6b7280;
+        }
+
+        .alert-item h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 0 0 3px;
+        }
+
+        .alert-item p {
+            font-size: 13px;
+            color: #555;
+            margin: 0;
+        }
+
+        .alert-time {
+            margin-left: auto;
+            font-size: 11px;
+            color: #aaa;
+            flex-shrink: 0;
+        }
+
         .btn-resolve {
             font-size: 11px;
             padding: 4px 10px;
@@ -223,292 +456,361 @@
             border-radius: 4px;
             transition: all 0.2s;
         }
+
         .btn-resolve:hover {
             background-color: var(--ok);
             color: white;
             border-color: var(--ok);
         }
 
-        /* Empty state */
         .empty-alerts {
-            text-align: center; padding: 40px 20px;
-            color: #9ca3af; background: var(--white);
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            background: var(--white);
             border-radius: 10px;
         }
-        .empty-alerts i { font-size: 36px; display: block; margin-bottom: 10px; }
 
-        /* ── Footer ── */
+        .empty-alerts i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
         .footer {
             background: var(--navy-d);
             color: #c0d8ff;
             padding: 40px;
             margin-top: auto;
         }
-        .footer-content { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; }
-        .footer h5 { color: white; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
-        .footer a { color: #c0d8ff; text-decoration: none; font-size: 13px; display: block; margin-bottom: 6px; }
-        .footer a:hover { color: white; }
-        .footer-copy { text-align: center; margin-top: 28px; font-size: 12px; color: #5b77a8; border-top: 1px solid rgba(255,255,255,.08); padding-top: 20px; max-width: 1200px; margin: 20px auto 0; }
 
-        .content-wrapper { flex: 1; }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .footer h5 {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .footer a {
+            color: #c0d8ff;
+            text-decoration: none;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        .footer-copy {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 12px;
+            color: #5b77a8;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 20px;
+            max-width: 1200px;
+            margin: 20px auto 0;
+        }
+
+        .content-wrapper {
+            flex: 1;
+        }
     </style>
 </head>
+
 <body>
 
-<script>
-    const userString = localStorage.getItem('vitaltrack_user');
-    let user;
-    if (!userString) { window.location.href = './Index.html'; }
-    else { user = JSON.parse(userString); }
+    <script>
+        const userString = localStorage.getItem('vitaltrack_user');
+        let user;
+        if (!userString) { window.location.href = './Index.html'; }
+        else { user = JSON.parse(userString); }
 
-    const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    function cerrarSesion() { localStorage.removeItem('vitaltrack_user'); window.location.href = './Index.html'; }
-</script>
+        const SUPABASE_URL = 'https://iqzndwgcavyklxxybfey.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxem5kd2djYXZ5a2x4eHliZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjQwNjUsImV4cCI6MjA5MDc0MDA2NX0.tFGKV1IKV1jvBKO2kh7l8XVEYPH8I3trDCEDuube08s';
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        function cerrarSesion() { localStorage.removeItem('vitaltrack_user'); window.location.href = './Index.html'; }
+    </script>
 
-<div id="toast-container"></div>
+    <div id="toast-container"></div>
 
-<header>
-    <div class="top-bar">
-        <div class="brand">
-            <img src="assets/img/Logo.png" alt="Logo" onerror="this.style.display='none'">
-            <span class="brand-text">VITALTRACK</span>
+    <header>
+        <div class="top-bar">
+            <div class="brand">
+                <img src="assets/img/Logo.png" alt="Logo" onerror="this.style.display='none'">
+                <span class="brand-text">VITALTRACK</span>
+            </div>
+            <div class="profile-wrap" onclick="document.getElementById('file-input').click()"
+                title="Cambiar foto de perfil">
+                <img src="assets/img/default-avatar.png" alt="Perfil" class="profile-pic" id="profile-pic"
+                    onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFlM2E4YSIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MyLjY3IDAgNC44IDIuMTMgNC44IDQuOFMxNC42NyAxNC42IDEyIDE0LjZTNy4yIDEyLjQ3IDcuMiA5LjggOS4zMyA1IDEyIDV6bTAgMTRjLTIuMjUgMC01LjMxIDEuMDItNy4wOCAyLjcgMS43OSAxLjcgNC4yNCAyLjggNy4wOCAyLjhzNS4yOS0xLjEgNy4wOC0yLjhDMTcuMzEgMjAuMDIgMTQuMjUgMTkgMTIgMTl6Ii8+PC9zdmc+'">
+            </div>
+            <input type="file" id="file-input" accept="image/png,image/jpeg">
         </div>
-        <div class="profile-wrap" onclick="document.getElementById('file-input').click()" title="Cambiar foto de perfil">
-            <img src="assets/img/default-avatar.png" alt="Perfil" class="profile-pic" id="profile-pic"
-                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFlM2E4YSIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MyLjY3IDAgNC44IDIuMTMgNC44IDQuOFMxNC42NyAxNC42IDEyIDE0LjZTNy4yIDEyLjQ3IDcuMiA5LjggOS4zMyA1IDEyIDV6bTAgMTRjLTIuMjUgMC01LjMxIDEuMDItNy4wOCAyLjcgMS43OSAxLjcgNC4yNCAyLjggNy4wOCAyLjhzNS4yOS0xLjEgNy4wOC0yLjhDMTcuMzEgMjAuMDIgMTQuMjUgMTkgMTIgMTl6Ii8+PC9zdmc+'">
-        </div>
-        <input type="file" id="file-input" accept="image/png,image/jpeg">
-    </div>
-    <nav class="app-bar">
-        <nav>
-            <a href="Home.html" class="active">Inicio</a>
-            <a href="Usuarios.html">Usuarios</a>
-            <a href="Signos.html">Signos</a>
-            <a href="Soporte.html">Soporte</a>
-            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+        <nav class="app-bar">
+            <nav>
+                <a href="Home.html" class="active">Inicio</a>
+                <a href="Usuarios.html">Usuarios</a>
+                <a href="Signos.html">Signos</a>
+                <a href="Soporte.html">Soporte</a>
+                <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+            </nav>
         </nav>
-    </nav>
-</header>
+    </header>
 
-<section class="hero-section">
-    <div class="container">
-        <div id="hero-badge" class="hero-badge no-alerts">
-            <i class="bi bi-circle-fill"></i>
-            <span id="status-text">Sistema en línea</span>
-        </div>
-        <h1>Bienvenido, <span id="doctor-name">Doctor</span></h1>
-        <p>Tienes <strong id="alert-count">0</strong> alertas críticas activas. Monitorea el estado en tiempo real de tus pacientes.</p>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="Usuarios.html" class="btn btn-primary fw-semibold px-4">Ver Pacientes</a>
-            <a href="Signos.html" class="btn btn-outline-light fw-semibold px-4">Monitorear Signos</a>
-        </div>
-    </div>
-</section>
-
-<div class="stats-row" id="stats-row">
-    <div class="stat-card">
-        <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
-        <div>
-            <div class="stat-value" id="stat-total">–</div>
-            <div class="stat-label">Pacientes totales</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
-        <div>
-            <div class="stat-value" id="stat-active">–</div>
-            <div class="stat-label">Pacientes activos</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon red"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <div>
-            <div class="stat-value" id="stat-alerts">0</div>
-            <div class="stat-label">Alertas críticas</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon amber"><i class="bi bi-activity"></i></div>
-        <div>
-            <div class="stat-value" id="stat-monitored">–</div>
-            <div class="stat-label">Con signos recientes</div>
-        </div>
-    </div>
-</div>
-
-<div class="content-wrapper">
-    <div class="content-section">
-        <h2 class="section-heading">Panel de Control</h2>
-        <div class="row g-3">
-            <div class="col-md-6 col-lg-4">
-                <a href="Usuarios.html" class="action-card">
-                    <div class="ac-icon"><i class="bi bi-people-fill"></i></div>
-                    <h3>Gestión de Pacientes</h3>
-                    <p>Añadir, editar o desactivar pacientes. Administra toda la cartera clínica asignada.</p>
-                </a>
+    <section class="hero-section">
+        <div class="container">
+            <div id="hero-badge" class="hero-badge no-alerts">
+                <i class="bi bi-circle-fill"></i>
+                <span id="status-text">Sistema en línea</span>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="Signos.html" class="action-card">
-                    <div class="ac-icon"><i class="bi bi-heart-pulse-fill"></i></div>
-                    <h3>Revisar Signos Vitales</h3>
-                    <p>Monitorea BPM, SpO₂, temperatura y pasos en tiempo real con alertas automáticas.</p>
-                </a>
+            <h1>Bienvenido, <span id="doctor-name">Doctor</span></h1>
+            <p>Tienes <strong id="alert-count">0</strong> alertas críticas activas. Monitorea el estado en tiempo real
+                de tus pacientes.</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="Usuarios.html" class="btn btn-primary fw-semibold px-4">Ver Pacientes</a>
+                <a href="Signos.html" class="btn btn-outline-light fw-semibold px-4">Monitorear Signos</a>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="Soporte.html" class="action-card">
-                    <div class="ac-icon"><i class="bi bi-question-circle-fill"></i></div>
-                    <h3>Soporte Técnico</h3>
-                    <p>Consulta las FAQs o reporta un problema directamente al equipo de soporte.</p>
-                </a>
+        </div>
+    </section>
+
+    <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+            <div>
+                <div class="stat-value" id="stat-total">–</div>
+                <div class="stat-label">Pacientes totales</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+                <div class="stat-value" id="stat-active">–</div>
+                <div class="stat-label">Pacientes activos</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div>
+                <div class="stat-value" id="stat-alerts">0</div>
+                <div class="stat-label">Alertas críticas</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-activity"></i></div>
+            <div>
+                <div class="stat-value" id="stat-monitored">–</div>
+                <div class="stat-label">Con signos recientes</div>
             </div>
         </div>
     </div>
 
-    <div class="content-section" style="padding-top:0;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="section-heading mb-0">Alertas en Tiempo Real</h2>
-            <a href="Auditoria.html" class="btn btn-outline-danger fw-semibold">
-                <i class="bi bi-clock-history"></i> Historial de Alertas
-            </a>
+    <div class="content-wrapper">
+        <div class="content-section">
+            <h2 class="section-heading">Panel de Control</h2>
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <a href="Usuarios.html" class="action-card">
+                        <div class="ac-icon"><i class="bi bi-people-fill"></i></div>
+                        <h3>Gestión de Pacientes</h3>
+                        <p>Añadir, editar o desactivar pacientes. Administra toda la cartera clínica asignada.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="Signos.html" class="action-card">
+                        <div class="ac-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                        <h3>Revisar Signos Vitales</h3>
+                        <p>Monitorea BPM, SpO₂, temperatura y pasos en tiempo real con alertas automáticas.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="Soporte.html" class="action-card">
+                        <div class="ac-icon"><i class="bi bi-question-circle-fill"></i></div>
+                        <h3>Soporte Técnico</h3>
+                        <p>Consulta las FAQs o reporta un problema directamente al equipo de soporte.</p>
+                    </a>
+                </div>
+            </div>
         </div>
-        
-        <div id="alerts-list"></div>
+
+        <div class="content-section" style="padding-top:0;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-heading mb-0">Alertas en Tiempo Real</h2>
+                <a href="Auditoria.html" class="btn btn-outline-danger fw-semibold">
+                    <i class="bi bi-clock-history"></i> Historial de Alertas
+                </a>
+            </div>
+
+            <div id="alerts-list"></div>
+        </div>
     </div>
-</div>
 
-<footer class="footer">
-    <div class="footer-content">
-        <div>
-            <span style="font-family:'DM Serif Display',serif;font-size:20px;color:white;">VITALTRACK</span>
-            <p style="font-size:13px;margin-top:8px;">Monitoreo clínico. Simple, rápido y confiable.</p>
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <span style="font-family:'DM Serif Display',serif;font-size:20px;color:white;">VITALTRACK</span>
+                <p style="font-size:13px;margin-top:8px;">Monitoreo clínico. Simple, rápido y confiable.</p>
+            </div>
+            <div>
+                <h5>Navegación</h5>
+                <a href="Home.html">Inicio</a>
+                <a href="Usuarios.html">Usuarios</a>
+                <a href="Signos.html">Signos</a>
+            </div>
+            <div>
+                <h5>Soporte</h5>
+                <a href="Soporte.html">Centro de Ayuda</a>
+                <a href="Reportar-problema.html">Reportar Problema</a>
+                <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+            </div>
         </div>
-        <div>
-            <h5>Navegación</h5>
-            <a href="Home.html">Inicio</a>
-            <a href="Usuarios.html">Usuarios</a>
-            <a href="Signos.html">Signos</a>
-        </div>
-        <div>
-            <h5>Soporte</h5>
-            <a href="Soporte.html">Centro de Ayuda</a>
-            <a href="Reportar-problema.html">Reportar Problema</a>
-            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
-        </div>
-    </div>
-    <div class="footer-copy">&copy; 2025 Hospital's name – All Rights Reserved by HNTEC-LTD</div>
-</footer>
+        <div class="footer-copy">&copy; 2025 Hospital's name – All Rights Reserved by HNTEC-LTD</div>
+    </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const profilePic       = document.getElementById('profile-pic');
-    const fileInput        = document.getElementById('file-input');
-    const doctorNameEl     = document.getElementById('doctor-name');
-    const alertCountEl     = document.getElementById('alert-count');
-    const statAlertsEl     = document.getElementById('stat-alerts');
-    const heroBadge        = document.getElementById('hero-badge');
-    const statusTextEl     = document.getElementById('status-text');
-    const alertsList       = document.getElementById('alerts-list');
-    const toastContainer   = document.getElementById('toast-container');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const profilePic = document.getElementById('profile-pic');
+        const fileInput = document.getElementById('file-input');
+        const doctorNameEl = document.getElementById('doctor-name');
+        const alertCountEl = document.getElementById('alert-count');
+        const statAlertsEl = document.getElementById('stat-alerts');
+        const heroBadge = document.getElementById('hero-badge');
+        const statusTextEl = document.getElementById('status-text');
+        const alertsList = document.getElementById('alerts-list');
+        const toastContainer = document.getElementById('toast-container');
 
-    let criticalAlerts     = [];
+        let criticalAlerts = [];
 
-    function loadProfile() {
-        if (user?.nombre) {
-            const first = user.nombre.split(' ')[0];
-            doctorNameEl.textContent = `Dr. ${first}`;
-        }
-        if (user?.avatar_url) profilePic.src = user.avatar_url;
-    }
-
-    async function loadStats() {
-        if (!user?.id) return;
-        const { data: patients } = await _supabase.from('pacientes').select('id, status').eq('doctor_id', user.id);
-        if (!patients) return;
-        document.getElementById('stat-total').textContent  = patients.length;
-        document.getElementById('stat-active').textContent = patients.filter(p => p.status?.toLowerCase() === 'activo').length;
-
-        const since = new Date(Date.now() - 3600000).toISOString();
-        const patientIds = patients.map(p => p.id);
-        if (patientIds.length > 0) {
-            const { data: recentSignos } = await _supabase
-                .from('signos_vitales')
-                .select('paciente_id')
-                .in('paciente_id', patientIds)
-                .gte('fecha_registro', since);
-            const uniqueMonitored = new Set(recentSignos?.map(s => s.paciente_id) || []);
-            document.getElementById('stat-monitored').textContent = uniqueMonitored.size;
-        } else {
-            document.getElementById('stat-monitored').textContent = 0;
-        }
-    }
-
-    /* ── Historial de Alertas No Resueltas ── */
-    async function cargarAlertasRecientes() {
-        if (!user?.id) return;
-
-        const { data: pacientes } = await _supabase
-            .from('pacientes')
-            .select('id, nombre, apellido')
-            .eq('doctor_id', user.id);
-
-        if (!pacientes || pacientes.length === 0) return;
-
-        const patientIds = [];
-        const mapNombres = {};
-        pacientes.forEach(p => {
-            patientIds.push(p.id);
-            mapNombres[p.id] = `${p.nombre} ${p.apellido}`;
-        });
-
-        const { data: alertasDB } = await _supabase
-            .from('signos_vitales')
-            .select('*')
-            .in('paciente_id', patientIds)
-            .or('bpm.gt.100,spo2.lt.90')
-            .is('alerta_resuelta', false)
-            .order('fecha_registro', { ascending: false });
-
-        if (alertasDB) {
-            criticalAlerts = alertasDB.map(record => {
-                const name = mapNombres[record.paciente_id] || `Paciente ${record.paciente_id}`;
-                const time = new Date(record.fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                
-                if (record.bpm > 100) {
-                    return { id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco elevado: ${record.bpm} BPM`, time };
-                } else {
-                    return { id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `Saturación de O₂ crítica: ${record.spo2}%`, time };
-                }
-            });
-        }
-    }
-
-    window.resolverAlerta = async function(id) {
-        criticalAlerts = criticalAlerts.filter(a => String(a.id) !== String(id));
-        renderAlerts(); // Esto refresca la pantalla inmediatamente
-
-        // Mandar el aviso a Supabase
-        try {
-            const { error } = await _supabase
-                .from('signos_vitales')
-                .update({ alerta_resuelta: true })
-                .eq('id', id);
-                
-            // Si hay un error en la base de datos (por ejemplo, si no existe la columna), lo mostrará en consola
-            if (error) {
-                console.error("Error al actualizar en Supabase:", error.message);
+        function loadProfile() {
+            if (user?.nombre) {
+                const first = user.nombre.split(' ')[0];
+                doctorNameEl.textContent = `Dr. ${first}`;
             }
-        } catch (err) {
-            console.error("Error de conexión al resolver la alerta", err);
+            if (user?.avatar_url) profilePic.src = user.avatar_url;
         }
-    };
 
-    function showToast(title, body, type = 'danger') {
-        const toast = document.createElement('div');
-        toast.className = `toast-alert ${type}`;
-        toast.innerHTML = `
+        async function loadStats() {
+            if (!user?.id) return;
+            const { data: patients } = await _supabase.from('pacientes').select('id, status').eq('doctor_id', user.id);
+            if (!patients) return;
+            document.getElementById('stat-total').textContent = patients.length;
+            document.getElementById('stat-active').textContent = patients.filter(p => p.status?.toLowerCase() === 'activo').length;
+
+            const since = new Date(Date.now() - 3600000).toISOString();
+            const patientIds = patients.map(p => p.id);
+            if (patientIds.length > 0) {
+                const { data: recentSignos } = await _supabase
+                    .from('signos_vitales')
+                    .select('paciente_id')
+                    .in('paciente_id', patientIds)
+                    .gte('fecha_registro', since);
+                const uniqueMonitored = new Set(recentSignos?.map(s => s.paciente_id) || []);
+                document.getElementById('stat-monitored').textContent = uniqueMonitored.size;
+            } else {
+                document.getElementById('stat-monitored').textContent = 0;
+            }
+        }
+
+        async function cargarAlertasRecientes() {
+            if (!user?.id) return;
+
+            // 1. Traemos a los pacientes CON sus rangos personalizados
+            const { data: pacientes } = await _supabase
+                .from('pacientes')
+                .select('id, nombre, apellido, bpm_min, bpm_max, spo2_min, spo2_max, temp_min, temp_max')
+                .eq('doctor_id', user.id);
+
+            if (!pacientes || pacientes.length === 0) return;
+
+            const patientIds = [];
+            const mapPacientes = {}; // Guardaremos toda la info del paciente aquí
+
+            pacientes.forEach(p => {
+                patientIds.push(p.id);
+                mapPacientes[p.id] = p; // Guardamos el objeto completo con sus límites
+            });
+
+            // 2. Traemos las lecturas no resueltas de estos pacientes
+            // Quitamos el .or() con valores fijos para que JS haga la validación dinámica
+            const { data: alertasDB } = await _supabase
+                .from('signos_vitales')
+                .select('*')
+                .in('paciente_id', patientIds)
+                .is('alerta_resuelta', false)
+                .order('fecha_registro', { ascending: false });
+
+            if (alertasDB) {
+                criticalAlerts = [];
+
+                alertasDB.forEach(record => {
+                    const paciente = mapPacientes[record.paciente_id];
+                    if (!paciente) return; // Si por alguna razón no existe, lo saltamos
+
+                    const name = `${paciente.nombre} ${paciente.apellido}`;
+                    const time = new Date(record.fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+                    // 3. Evaluamos dinámicamente contra los rangos del paciente
+
+                    // Ritmo Cardíaco
+                    if (record.bpm > paciente.bpm_max) {
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco ALTO: ${record.bpm} BPM (Límite: ${paciente.bpm_max})`, time });
+                    } else if (record.bpm < paciente.bpm_min) {
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco BAJO: ${record.bpm} BPM (Límite: ${paciente.bpm_min})`, time });
+                    }
+
+                    // SpO2
+                    if (record.spo2 > paciente.spo2_max) {
+                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ ALTO: ${record.spo2}% (Límite: ${paciente.spo2_max})`, time });
+                    } else if (record.spo2 < paciente.spo2_min) {
+                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ BAJO: ${record.spo2}% (Límite: ${paciente.spo2_min})`, time });
+                    }
+
+                    // Temperatura
+                    if (record.temperatura > paciente.temp_max) {
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura ALTA: ${record.temperatura}°C (Límite: ${paciente.temp_max})`, time });
+                    } else if (record.temperatura < paciente.temp_min) {
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-thermometer-snow', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura BAJA: ${record.temperatura}°C (Límite: ${paciente.temp_min})`, time });
+                    }
+                });
+            }
+        }
+
+        window.resolverAlerta = async function (id) {
+            criticalAlerts = criticalAlerts.filter(a => String(a.id) !== String(id));
+            renderAlerts(); // Esto refresca la pantalla inmediatamente
+
+            // Mandar el aviso a Supabase
+            try {
+                const { error } = await _supabase
+                    .from('signos_vitales')
+                    .update({ alerta_resuelta: true })
+                    .eq('id', id);
+
+                // Si hay un error en la base de datos (por ejemplo, si no existe la columna), lo mostrará en consola
+                if (error) {
+                    console.error("Error al actualizar en Supabase:", error.message);
+                }
+            } catch (err) {
+                console.error("Error de conexión al resolver la alerta", err);
+            }
+        };
+
+        function showToast(title, body, type = 'danger') {
+            const toast = document.createElement('div');
+            toast.className = `toast-alert ${type}`;
+            toast.innerHTML = `
             <i class="toast-icon ${type} bi ${type === 'danger' ? 'bi-exclamation-triangle-fill' : 'bi-exclamation-circle-fill'}"></i>
             <div>
                 <div class="toast-title">${title}</div>
@@ -516,30 +818,30 @@
             </div>
             <button class="toast-close" onclick="this.closest('.toast-alert').remove()">×</button>
         `;
-        toastContainer.prepend(toast);
-        setTimeout(() => toast.remove(), 8000);
-    }
+            toastContainer.prepend(toast);
+            setTimeout(() => toast.remove(), 8000);
+        }
 
-    function renderAlerts() {
-        if (criticalAlerts.length === 0) {
-            alertsList.innerHTML = `
+        function renderAlerts() {
+            if (criticalAlerts.length === 0) {
+                alertsList.innerHTML = `
                 <div class="empty-alerts">
                     <i class="bi bi-check-circle-fill text-success"></i>
                     <p class="mb-0">Sin alertas críticas activas en este momento. Buen trabajo.</p>
                 </div>`;
-            alertCountEl.textContent = '0';
-            statAlertsEl.textContent = '0';
-            heroBadge.className = 'hero-badge no-alerts';
-            statusTextEl.textContent = 'Todos estables';
-            return;
-        }
+                alertCountEl.textContent = '0';
+                statAlertsEl.textContent = '0';
+                heroBadge.className = 'hero-badge no-alerts';
+                statusTextEl.textContent = 'Todos estables';
+                return;
+            }
 
-        alertCountEl.textContent = criticalAlerts.length;
-        statAlertsEl.textContent = criticalAlerts.length;
-        heroBadge.className = 'hero-badge';
-        statusTextEl.textContent = `${criticalAlerts.length} alerta(s) activa(s)`;
+            alertCountEl.textContent = criticalAlerts.length;
+            statAlertsEl.textContent = criticalAlerts.length;
+            heroBadge.className = 'hero-badge';
+            statusTextEl.textContent = `${criticalAlerts.length} alerta(s) activa(s)`;
 
-        alertsList.innerHTML = criticalAlerts.map(a => `
+            alertsList.innerHTML = criticalAlerts.map(a => `
             <div class="alert-item ${a.type}">
                 <i class="alert-item-icon bi ${a.icon}"></i>
                 <div style="flex: 1;">
@@ -552,62 +854,94 @@
                 <span class="alert-time">${a.time}</span>
             </div>
         `).join('');
-    }
+        }
 
-    async function processNewReading(record) {
-        const { id, bpm, spo2, temperatura, paciente_id, fecha_registro } = record;
-        const time = new Date(fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        async function processNewReading(record) {
+            const { id, bpm, spo2, temperatura, paciente_id, fecha_registro } = record;
+            const time = new Date(fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-        const { data: p } = await _supabase.from('pacientes').select('nombre, apellido').eq('id', paciente_id).single();
-        const name = p ? `${p.nombre} ${p.apellido}` : `Paciente ID ${paciente_id}`;
+            // Traemos al paciente con sus límites
+            const { data: p } = await _supabase
+                .from('pacientes')
+                .select('nombre, apellido, bpm_min, bpm_max, spo2_min, spo2_max, temp_min, temp_max')
+                .eq('id', paciente_id)
+                .single();
 
-        if (bpm > 100) {
-            const alert = { id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco elevado: ${bpm} BPM`, time };
-            criticalAlerts.unshift(alert);
-            showToast(`Ritmo cardíaco elevado`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
+            if (!p) return;
+
+            const name = `${p.nombre} ${p.apellido}`;
+            let needsRender = false;
+
+            // Evaluamos BPM
+            if (bpm > p.bpm_max) {
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco ALTO: ${bpm} BPM`, time });
+                showToast(`BPM Alto`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
+                needsRender = true;
+            } else if (bpm < p.bpm_min) {
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco BAJO: ${bpm} BPM`, time });
+                showToast(`BPM Bajo`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
+                needsRender = true;
+            }
+
+            // Evaluamos SpO2
+            if (spo2 > p.spo2_max) {
+                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ ALTO: ${spo2}%`, time });
+                showToast(`SpO₂ Alto`, `${name} – ${spo2}% a las ${time}`, 'warning');
+                needsRender = true;
+            } else if (spo2 < p.spo2_min) {
+                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ BAJO: ${spo2}%`, time });
+                showToast(`SpO₂ Bajo`, `${name} – ${spo2}% a las ${time}`, 'warning');
+                needsRender = true;
+            }
+
+            // Evaluamos Temperatura
+            if (temperatura > p.temp_max) {
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura ALTA: ${temperatura}°C`, time });
+                showToast(`Temperatura Alta`, `${name} – ${temperatura}°C a las ${time}`, 'danger');
+                needsRender = true;
+            } else if (temperatura < p.temp_min) {
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-thermometer-snow', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura BAJA: ${temperatura}°C`, time });
+                showToast(`Temperatura Baja`, `${name} – ${temperatura}°C a las ${time}`, 'danger');
+                needsRender = true;
+            }
+
+            if (needsRender) renderAlerts();
+        }
+
+        function startRealtime() {
+            _supabase.channel('signos-vitales-realtime')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'signos_vitales' },
+                    payload => { processNewReading(payload.new); })
+                .subscribe();
+        }
+
+        fileInput.addEventListener('change', async e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop();
+            const path = `avatars/${user.id}_${Date.now()}.${ext}`;
+            try {
+                const { error: upErr } = await _supabase.storage.from('avatars').upload(path, file);
+                if (upErr) throw upErr;
+                const { data: urlData } = _supabase.storage.from('avatars').getPublicUrl(path);
+                const url = urlData.publicUrl;
+                await _supabase.from('medicos').update({ avatar_url: url }).eq('id', user.id);
+                profilePic.src = url;
+                user.avatar_url = url;
+                localStorage.setItem('vitaltrack_user', JSON.stringify(user));
+            } catch (err) {
+                console.error('Error uploading avatar:', err);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadProfile();
+            loadStats();
+            await cargarAlertasRecientes();
             renderAlerts();
-        }
-        if (spo2 < 90) {
-            const alert = { id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `Saturación de O₂ crítica: ${spo2}%`, time };
-            criticalAlerts.unshift(alert);
-            showToast(`SpO₂ crítico`, `${name} – ${spo2}% a las ${time}`, 'warning');
-            renderAlerts();
-        }
-    }
-
-    function startRealtime() {
-        _supabase.channel('signos-vitales-realtime')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'signos_vitales' },
-                payload => { processNewReading(payload.new); })
-            .subscribe();
-    }
-
-    fileInput.addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const ext = file.name.split('.').pop();
-        const path = `avatars/${user.id}_${Date.now()}.${ext}`;
-        try {
-            const { error: upErr } = await _supabase.storage.from('avatars').upload(path, file);
-            if (upErr) throw upErr;
-            const { data: urlData } = _supabase.storage.from('avatars').getPublicUrl(path);
-            const url = urlData.publicUrl;
-            await _supabase.from('medicos').update({ avatar_url: url }).eq('id', user.id);
-            profilePic.src = url;
-            user.avatar_url = url;
-            localStorage.setItem('vitaltrack_user', JSON.stringify(user));
-        } catch (err) {
-            console.error('Error uploading avatar:', err);
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        loadProfile();
-        loadStats();
-        await cargarAlertasRecientes(); 
-        renderAlerts(); 
-        startRealtime();
-    });
-</script>
+            startRealtime();
+        });
+    </script>
 </body>
+
 </html>

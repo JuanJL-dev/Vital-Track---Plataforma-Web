@@ -488,7 +488,7 @@
                         <div class="stat-label">Oxigenación</div>
                         <div class="stat-value"><span id="mod-spo2">--</span> <span class="stat-unit">%</span></div>
                     </div>
-                    <div class="stat-box">
+                    <div class="stat-box" id="box-temp">
                         <div class="stat-label">Temperatura</div>
                         <div class="stat-value"><span id="mod-temp">--</span> <span class="stat-unit">°C</span></div>
                     </div>
@@ -512,10 +512,11 @@
         let user = null;
         let allAlerts = [];
         let mapPacientes = {};
-        let currentPage = 0;          
-        const itemsPerPage = 10;      
-        let totalRecords = 0;        
-        let patientIdsArray = [];    
+        let currentPage = 0;
+        const itemsPerPage = 10;
+        let totalRecords = 0;
+        let patientIdsArray = [];
+
         // Verificar Autenticación
         document.addEventListener('DOMContentLoaded', async () => {
             const userData = localStorage.getItem('vitaltrack_user');
@@ -527,13 +528,12 @@
             await loadAlertHistory();
         });
 
-
         async function loadAlertHistory() {
             try {
-                // A) Obtener todos los pacientes del doctor actual
+                // A) Obtener todos los pacientes del doctor actual CON sus límites
                 const { data: pacientes, error: errPacientes } = await _supabase
                     .from('pacientes')
-                    .select('id, nombre, apellido')
+                    .select('id, nombre, apellido, bpm_min, bpm_max, spo2_min, temp_min, temp_max')
                     .eq('doctor_id', user.id);
 
                 if (errPacientes) throw errPacientes;
@@ -543,13 +543,14 @@
                     return;
                 }
 
-                // Crear un diccionario para buscar nombres rápido y un array de IDs
+                // Guardar los objetos completos de paciente para tener acceso a los límites
                 const patientIds = [];
                 pacientes.forEach(p => {
                     patientIds.push(p.id);
-                    mapPacientes[p.id] = `${p.nombre || ''} ${p.apellido || ''}`.trim();
+                    mapPacientes[p.id] = p;
                 });
                 patientIdsArray = patientIds;
+
                 await cargarPaginaDesdeBD();
 
             } catch (error) {
@@ -567,23 +568,38 @@
                 return;
             }
 
-            tbody.innerHTML = dataArray.map((registro, index) => {
+            tbody.innerHTML = dataArray.map((registro) => {
                 const dateObj = new Date(registro.fecha_registro);
-                const fecha = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-                const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const nombrePaciente = mapPacientes[registro.paciente_id] || 'Paciente Desconocido';
+                const fecha = dateObj.toLocaleDateString('es-ES', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' });
+                const hora = dateObj.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' });
 
-                // Determinar qué falló para el Badge
+                const p = mapPacientes[registro.paciente_id];
+                const nombrePaciente = p ? `${p.nombre} ${p.apellido}` : 'Paciente Desconocido';
+
+                // Determinar qué falló dinámicamente usando los límites de cada paciente
+                let fallos = [];
+                if (registro.bpm > p.bpm_max) fallos.push("bpm_alto");
+                if (registro.bpm < p.bpm_min) fallos.push("bpm_bajo");
+                if (registro.spo2 < p.spo2_min) fallos.push("spo2_bajo"); // Sin spo2_max
+                if (registro.temperatura > p.temp_max) fallos.push("temp_alta");
+                if (registro.temperatura < p.temp_min) fallos.push("temp_baja");
+
+                // AQUÍ REGRESAN TUS ESTILOS Y COLORES ORIGINALES EXACTOS
                 let badgeHTML = '';
-                if (registro.bpm > 100 && registro.spo2 < 95) {
-                    badgeHTML = '<span class="badge badge-danger"><i class="bi bi-heartbreak-fill"></i> Múltiple (BPM/SpO2)</span>';
-                } else if (registro.bpm > 100) {
+                if (fallos.length > 1) {
+                    badgeHTML = '<span class="badge badge-danger"><i class="bi bi-heartbreak-fill"></i> Múltiple</span>';
+                } else if (fallos.includes("bpm_alto")) {
                     badgeHTML = '<span class="badge badge-danger"><i class="bi bi-activity"></i> Taquicardia (' + registro.bpm + ')</span>';
-                } else if (registro.spo2 < 95) {
+                } else if (fallos.includes("bpm_bajo")) {
+                    badgeHTML = '<span class="badge badge-warn"><i class="bi bi-activity"></i> Bradicardia (' + registro.bpm + ')</span>';
+                } else if (fallos.includes("spo2_bajo")) {
                     badgeHTML = '<span class="badge badge-warn"><i class="bi bi-lungs-fill"></i> Hipoxia (' + registro.spo2 + '%)</span>';
+                } else if (fallos.includes("temp_alta")) {
+                    badgeHTML = '<span class="badge badge-danger"><i class="bi bi-thermometer-high"></i> Fiebre (' + registro.temperatura + '°C)</span>';
+                } else if (fallos.includes("temp_baja")) {
+                    badgeHTML = '<span class="badge badge-warn"><i class="bi bi-thermometer-snow"></i> Hipotermia (' + registro.temperatura + '°C)</span>';
                 }
 
-                // Guardamos los datos completos en el botón en formato string (JSON seguro)
                 const registroString = encodeURIComponent(JSON.stringify(registro));
 
                 return `
@@ -613,27 +629,28 @@
         function openModal(dataString) {
             const registro = JSON.parse(decodeURIComponent(dataString));
             const dateObj = new Date(registro.fecha_registro);
+            const p = mapPacientes[registro.paciente_id];
 
-            // Llenar info paciente
-            document.getElementById('mod-paciente').textContent = mapPacientes[registro.paciente_id] || 'Desconocido';
-            document.getElementById('mod-fecha').textContent = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('mod-hora').textContent = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('mod-paciente').textContent = p ? `${p.nombre} ${p.apellido}` : 'Desconocido';
+            document.getElementById('mod-fecha').textContent = dateObj.toLocaleDateString('es-ES', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('mod-hora').textContent = dateObj.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-            // Llenar stats
             document.getElementById('mod-bpm').textContent = registro.bpm;
             document.getElementById('mod-spo2').textContent = registro.spo2;
             document.getElementById('mod-temp').textContent = registro.temperatura;
             document.getElementById('mod-pasos').textContent = registro.pasos;
 
-            // Resetear estilos de alerta visual (cuadros rojos palpadeantes)
             document.getElementById('box-bpm').classList.remove('alert-trigger');
             document.getElementById('box-spo2').classList.remove('alert-trigger');
+            if (document.getElementById('box-temp')) document.getElementById('box-temp').classList.remove('alert-trigger');
 
-            // Encender alarma visual en el modal según el parámetro rebasado
-            if (registro.bpm > 100) document.getElementById('box-bpm').classList.add('alert-trigger');
-            if (registro.spo2 < 95) document.getElementById('box-spo2').classList.add('alert-trigger');
+            // Lógica dinámica para encender los cuadros en rojo en el modal
+            if (registro.bpm > p.bpm_max || registro.bpm < p.bpm_min) document.getElementById('box-bpm').classList.add('alert-trigger');
+            if (registro.spo2 < p.spo2_min) document.getElementById('box-spo2').classList.add('alert-trigger');
+            if (registro.temperatura > p.temp_max || registro.temperatura < p.temp_min) {
+                if (document.getElementById('box-temp')) document.getElementById('box-temp').classList.add('alert-trigger');
+            }
 
-            // Mostrar Modal
             document.getElementById('detailModal').classList.add('open');
         }
 
@@ -641,37 +658,37 @@
             document.getElementById('detailModal').classList.remove('open');
         }
 
-        // --- 5. Buscador ---
+        // --- 5. Buscador Dinámico ---
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
+
             const filtrados = allAlerts.filter(reg => {
-                const nombre = (mapPacientes[reg.paciente_id] || '').toLowerCase();
-                // Busca por nombre o si la palabra "bpm" o "spo2" coinciden con el tipo de alerta
-                const esBpm = reg.bpm > 100 && (term.includes('taqui') || term.includes('bpm') || term.includes('corazon'));
-                const esSpo = reg.spo2 < 95 && (term.includes('hipo') || term.includes('spo2') || term.includes('oxigeno'));
-                return nombre.includes(term) || esBpm || esSpo;
+                const p = mapPacientes[reg.paciente_id];
+                const nombre = p ? `${p.nombre} ${p.apellido}`.toLowerCase() : '';
+
+                const tieneBPM = (reg.bpm > p.bpm_max || reg.bpm < p.bpm_min) && (term.includes('bpm') || term.includes('taqui') || term.includes('bradi'));
+                const tieneSpO2 = (reg.spo2 < p.spo2_min) && (term.includes('spo2') || term.includes('oxigeno') || term.includes('hipoxia'));
+                const tieneTemp = (reg.temperatura > p.temp_max || reg.temperatura < p.temp_min) && (term.includes('temp') || term.includes('fiebre'));
+
+                return nombre.includes(term) || tieneBPM || tieneSpO2 || tieneTemp;
             });
-            renderTable(filtrados);
+
+            renderTable(filtrados.slice(0, itemsPerPage));
         });
 
+        // --- 6. Descarga a Excel ---
         async function descargarAuditoriaExcel() {
             const fechaFiltro = document.getElementById('fechaExportar').value;
             const btn = document.getElementById('btn-excel');
 
-            // Preparamos la consulta general
-            let query = _supabase
-                .from('signos_vitales')
-                .select('*')
-                .in('paciente_id', patientIdsArray)
-                .or('bpm.gt.100,spo2.lt.95')
-                .order('fecha_registro', { ascending: false });
+            let query = _supabase.from('signos_vitales').select('*').in('paciente_id', patientIdsArray).order('fecha_registro', { ascending: false });
 
             let nombreArchivo = "Auditoria_VitalTrack_Historico.xlsx";
 
-            // Si hay fecha, filtramos. Si no, le avisamos que descargará todo.
             if (fechaFiltro) {
-                const inicioDia = new Date(`${fechaFiltro}T00:00:00`).toISOString();
-                const finDia = new Date(`${fechaFiltro}T23:59:59`).toISOString();
+                // Forzamos el rango directamente en texto UTC (Z) sin pasar por conversiones locales
+                const inicioDia = `${fechaFiltro}T00:00:00.000Z`;
+                const finDia = `${fechaFiltro}T23:59:59.999Z`;
                 query = query.gte('fecha_registro', inicioDia).lte('fecha_registro', finDia);
                 nombreArchivo = `Auditoria_VitalTrack_${fechaFiltro}.xlsx`;
             } else {
@@ -684,33 +701,39 @@
             btn.disabled = true;
 
             try {
-                const { data: alertasExport, error: errExport } = await query;
-
+                const { data: historial, error: errExport } = await query;
                 if (errExport) throw errExport;
 
-                if (!alertasExport || alertasExport.length === 0) {
-                    alert("No se encontraron alertas registradas para los criterios seleccionados.");
+                // Solo filtra los que rompieron las reglas dinámicas
+                const alertasReales = historial.filter(reg => {
+                    const p = mapPacientes[reg.paciente_id];
+                    if (!p) return false;
+                    return (reg.bpm > p.bpm_max || reg.bpm < p.bpm_min || reg.spo2 < p.spo2_min || reg.temperatura > p.temp_max || reg.temperatura < p.temp_min);
+                });
+
+                if (alertasReales.length === 0) {
+                    alert("No se encontraron alertas reales registradas para los criterios seleccionados.");
                     return;
                 }
 
                 btn.innerHTML = '<i class="bi bi-file-earmark-excel"></i> Armando Excel...';
 
-                // Preparar la información limpia para el Excel
-                const datosExcel = alertasExport.map(registro => {
+                const datosExcel = alertasReales.map(registro => {
                     const dateObj = new Date(registro.fecha_registro);
-                    const fecha = dateObj.toLocaleDateString('es-ES');
-                    const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute:'2-digit', second:'2-digit' });
-                    const nombrePaciente = mapPacientes[registro.paciente_id] || 'Desconocido';
-                    
+                    const p = mapPacientes[registro.paciente_id];
+
                     let motivo = [];
-                    if (registro.bpm > 100) motivo.push("Taquicardia (>100 BPM)");
-                    if (registro.spo2 < 95) motivo.push("Hipoxia (<95%)");
+                    if (registro.bpm > p.bpm_max) motivo.push(`Taquicardia (> ${p.bpm_max})`);
+                    if (registro.bpm < p.bpm_min) motivo.push(`Bradicardia (< ${p.bpm_min})`);
+                    if (registro.spo2 < p.spo2_min) motivo.push(`Hipoxia (< ${p.spo2_min})`);
+                    if (registro.temperatura > p.temp_max) motivo.push(`Fiebre (> ${p.temp_max})`);
+                    if (registro.temperatura < p.temp_min) motivo.push(`Hipotermia (< ${p.temp_min})`);
 
                     return {
-                        "Fecha": fecha,
-                        "Hora": hora,
-                        "Paciente": nombrePaciente,
-                        "ID Paciente": registro.paciente_id.slice(0,8),
+                        "Fecha": dateObj.toLocaleDateString('es-ES', { timeZone: 'UTC' }),
+                        "Hora": dateObj.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                        "Paciente": p ? `${p.nombre} ${p.apellido}` : 'Desconocido',
+                        "ID Paciente": registro.paciente_id.slice(0, 8),
                         "Motivo de Alerta": motivo.join(" + "),
                         "Ritmo Cardíaco (BPM)": registro.bpm,
                         "SpO2 (%)": registro.spo2,
@@ -718,12 +741,9 @@
                     };
                 });
 
-                // Crear el libro de Excel
                 const hoja = XLSX.utils.json_to_sheet(datosExcel);
                 const libro = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(libro, hoja, "Auditoria");
-
-                // Descargar el archivo
                 XLSX.writeFile(libro, nombreArchivo);
 
             } catch (error) {
@@ -735,50 +755,63 @@
             }
         }
 
+        // --- 7. Carga Base (Filtrado Dinámico Cliente) ---
         async function cargarPaginaDesdeBD() {
-            const inicio = currentPage * itemsPerPage;
-            const fin = inicio + itemsPerPage - 1;
-            const fechaFiltro = document.getElementById('fechaExportar').value; // Leemos el calendario
+            const fechaFiltro = document.getElementById('fechaExportar').value;
 
-            document.getElementById('alertsTableBody').innerHTML = '<tr><td colspan="4" class="loading-row"><i class="bi bi-hourglass-split"></i> Cargando...</td></tr>';
+            document.getElementById('alertsTableBody').innerHTML = '<tr><td colspan="4" class="loading-row"><i class="bi bi-hourglass-split"></i> Analizando historial...</td></tr>';
 
-            // Preparamos la consulta base
+            // Traemos todos los registros de los pacientes del doc
             let query = _supabase
                 .from('signos_vitales')
-                .select('*', { count: 'exact' })
+                .select('*')
                 .in('paciente_id', patientIdsArray)
-                .or('bpm.gt.100,spo2.lt.95')
-                .order('fecha_registro', { ascending: false })
-                .range(inicio, fin);
+                .order('fecha_registro', { ascending: false });
 
-            // Si hay una fecha seleccionada, filtramos por ese día exacto (corrigiendo zona horaria)
             if (fechaFiltro) {
-                const inicioDia = new Date(`${fechaFiltro}T00:00:00`).toISOString();
-                const finDia = new Date(`${fechaFiltro}T23:59:59`).toISOString();
+                // Forzamos el rango directamente en texto UTC (Z) sin pasar por conversiones locales
+                const inicioDia = `${fechaFiltro}T00:00:00.000Z`;
+                const finDia = `${fechaFiltro}T23:59:59.999Z`;
                 query = query.gte('fecha_registro', inicioDia).lte('fecha_registro', finDia);
             }
 
-            const { data: alertas, count, error: errAlertas } = await query;
+            const { data: historial, error: errAlertas } = await query;
 
             if (errAlertas) throw errAlertas;
 
-            allAlerts = alertas || [];
-            totalRecords = count || 0;
-            
-            renderTable(allAlerts);
+            // Filtramos localmente usando las reglas específicas de cada paciente (NO existe spo2_max)
+            allAlerts = (historial || []).filter(reg => {
+                const p = mapPacientes[reg.paciente_id];
+                if (!p) return false;
+                return (
+                    reg.bpm > p.bpm_max || reg.bpm < p.bpm_min ||
+                    reg.spo2 < p.spo2_min ||
+                    reg.temperatura > p.temp_max || reg.temperatura < p.temp_min
+                );
+            });
+
+            totalRecords = allAlerts.length;
+            actualizarVistaPaginada();
+        }
+
+        function actualizarVistaPaginada() {
+            const inicio = currentPage * itemsPerPage;
+            const fin = inicio + itemsPerPage;
+            const paginaActual = allAlerts.slice(inicio, fin);
+
+            renderTable(paginaActual);
             actualizarBotonesPaginacion();
         }
 
-        // --- 7. Evento para que la tabla reaccione al cambiar la fecha ---
         document.getElementById('fechaExportar').addEventListener('change', () => {
-            currentPage = 0; 
-            cargarPaginaDesdeBD(); 
+            currentPage = 0;
+            cargarPaginaDesdeBD();
         });
 
         // --- LÓGICA DE LOS BOTONES ---
         function cambiarPagina(direccion) {
             currentPage += direccion;
-            cargarPaginaDesdeBD();
+            actualizarVistaPaginada();
         }
 
         function actualizarBotonesPaginacion() {
@@ -786,16 +819,13 @@
             const btnNext = document.getElementById('btn-next');
             const pageInfo = document.getElementById('page-info');
 
-            // Habilitar / Deshabilitar botones
             btnPrev.disabled = currentPage === 0;
             btnNext.disabled = (currentPage * itemsPerPage) + itemsPerPage >= totalRecords;
 
-            // Actualizar texto
             const mostrandoInicio = totalRecords === 0 ? 0 : (currentPage * itemsPerPage) + 1;
             const mostrandoFin = Math.min((currentPage * itemsPerPage) + itemsPerPage, totalRecords);
             pageInfo.textContent = `Mostrando ${mostrandoInicio} - ${mostrandoFin} de ${totalRecords} resultados`;
         }
-
     </script>
     <script src="alertas-globales.js"></script>
 </body>

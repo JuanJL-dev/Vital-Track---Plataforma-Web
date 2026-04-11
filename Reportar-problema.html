@@ -1,177 +1,409 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportar Problema – VITALTRACK</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <style>
-        :root{--navy:#1e3a8a;--navy-d:#122149;--navy-l:#c0d8ff;--bg:#f7f8fa;--white:#fff;--danger:#e11d48;--ok:#16a34a;}
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1a1a2e;min-height:100vh;}
-        .top-bar{background:var(--white);padding:14px 40px;display:flex;justify-content:center;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.06);gap:12px;border-bottom:3px solid var(--navy);}
-        .brand-text{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);letter-spacing:1px;}
-        .wrapper{max-width:900px;margin:44px auto;padding:0 20px 60px;display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;}
-        .aside{flex:0 0 260px;}
-        .aside h1{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--navy);font-weight:normal;margin-bottom:20px;line-height:1.2;}
-        .aside p{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:20px;}
-        .contact-info{background:var(--white);border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
-        .contact-info h3{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
-        .contact-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;color:#555;}
-        .contact-row i{color:var(--navy);font-size:16px;flex-shrink:0;}
-        .form-card{flex:1;min-width:300px;background:var(--white);border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.07);overflow:hidden;}
-        .form-card-header{background:linear-gradient(135deg,var(--navy-d),var(--navy));padding:26px 32px;color:white;}
-        .form-card-header h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:normal;}
-        .form-card-header p{color:var(--navy-l);font-size:13px;margin-top:4px;}
-        .form-card-body{padding:28px 32px;}
-        .form-group{margin-bottom:18px;}
-        label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;}
-        label .req{color:var(--danger);}
-        input[type="text"],input[type="email"],textarea,select{
-            width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:8px;
-            font-size:14px;font-family:'DM Sans',sans-serif;background:#fafafa;color:#1a1a2e;
-            outline:none;transition:border-color .2s;}
-        input:focus,textarea:focus,select:focus{border-color:#3b82f6;background:white;}
-        textarea{height:140px;resize:vertical;}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-        #msg{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;display:none;}
-        #msg.success{background:#f0fdf4;color:var(--ok);border:1px solid #bbf7d0;display:block;}
-        #msg.error{background:#fff1f2;color:var(--danger);border:1px solid #fecdd3;display:block;}
-        .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;}
-        .btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;text-decoration:none;transition:all .2s;}
-        .btn-navy{background:var(--navy);color:#fff;} .btn-navy:hover:not(:disabled){background:var(--navy-d);}
-        .btn-navy:disabled{opacity:.5;cursor:not-allowed;}
-        .btn-ghost{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;} .btn-ghost:hover{background:#f3f4f6;}
-        @media(max-width:640px){.form-row{grid-template-columns:1fr;}}
+        :root {
+            --navy: #1e3a8a;
+            --navy-d: #122149;
+            --navy-l: #c0d8ff;
+            --bg: #f7f8fa;
+            --white: #fff;
+            --danger: #e11d48;
+            --ok: #16a34a;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: var(--white);
+            padding: 14px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            gap: 12px;
+            border-bottom: 3px solid var(--navy);
+        }
+
+        .brand-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--navy);
+            letter-spacing: 1px;
+        }
+
+        .wrapper {
+            max-width: 900px;
+            margin: 44px auto;
+            padding: 0 20px 60px;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .aside {
+            flex: 0 0 260px;
+        }
+
+        .aside h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: var(--navy);
+            font-weight: normal;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .aside p {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .contact-info {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+        }
+
+        .contact-info h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 12px;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .contact-row i {
+            color: var(--navy);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .form-card {
+            flex: 1;
+            min-width: 300px;
+            background: var(--white);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .07);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            background: linear-gradient(135deg, var(--navy-d), var(--navy));
+            padding: 26px 32px;
+            color: white;
+        }
+
+        .form-card-header h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 18px;
+            font-weight: normal;
+        }
+
+        .form-card-header p {
+            color: var(--navy-l);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .form-card-body {
+            padding: 28px 32px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 6px;
+        }
+
+        label .req {
+            color: var(--danger);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            background: #fafafa;
+            color: #1a1a2e;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        textarea {
+            height: 140px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        #msg {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+        }
+
+        #msg.success {
+            background: #f0fdf4;
+            color: var(--ok);
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+
+        #msg.error {
+            background: #fff1f2;
+            color: var(--danger);
+            border: 1px solid #fecdd3;
+            display: block;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 11px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-navy {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .btn-navy:hover:not(:disabled) {
+            background: var(--navy-d);
+        }
+
+        .btn-navy:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #6b7280;
+            border: 1.5px solid #e5e7eb;
+        }
+
+        .btn-ghost:hover {
+            background: #f3f4f6;
+        }
+
+        @media(max-width:640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
+
 <body>
-<header>
-    <div class="top-bar">
-        <img src="assets/img/Logo.png" alt="Logo" style="width:34px;border-radius:6px;" onerror="this.style.display='none'">
-        <span class="brand-text">VITALTRACK</span>
-    </div>
-</header>
-
-<div class="wrapper">
-    <aside class="aside">
-        <h1>Reportar un Problema</h1>
-        <p>Describe el problema con el mayor detalle posible. Nuestro equipo técnico revisará tu reporte y responderá a la brevedad.</p>
-        <div class="contact-info">
-            <h3>Contacto directo</h3>
-            <div class="contact-row"><i class="bi bi-envelope-fill"></i> soporte@vitaltrack.mx</div>
-            <div class="contact-row"><i class="bi bi-telephone-fill"></i> (442) 800-0001</div>
-            <div class="contact-row"><i class="bi bi-clock-fill"></i> Lun–Vie, 8 AM – 6 PM</div>
+    <header>
+        <div class="top-bar">
+            <img src="assets/img/Logo.png" alt="Logo" style="width:34px;border-radius:6px;"
+                onerror="this.style.display='none'">
+            <span class="brand-text">VITALTRACK</span>
         </div>
-    </aside>
+    </header>
 
-    <div class="form-card">
-        <div class="form-card-header">
-            <h2>Formulario de Reporte</h2>
-            <p>Todos los campos marcados con * son obligatorios.</p>
-        </div>
-        <div class="form-card-body">
-            <form id="report-form" action="https://formspree.io/f/xeopqnkg" method="POST" novalidate>
+    <div class="wrapper">
+        <aside class="aside">
+            <h1>Reportar un Problema</h1>
+            <p>Describe el problema con el mayor detalle posible. Nuestro equipo técnico revisará tu reporte y
+                responderá a la brevedad.</p>
+            <div class="contact-info">
+                <h3>Contacto directo</h3>
+                <div class="contact-row"><i class="bi bi-envelope-fill"></i> soporte@vitaltrack.mx</div>
+                <div class="contact-row"><i class="bi bi-telephone-fill"></i> (442) 800-0001</div>
+                <div class="contact-row"><i class="bi bi-clock-fill"></i> Lun–Vie, 8 AM – 6 PM</div>
+            </div>
+        </aside>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre">Nombre <span class="req">*</span></label>
-                        <input type="text" id="nombre" name="Nombre" required placeholder="Tu nombre">
+        <div class="form-card">
+            <div class="form-card-header">
+                <h2>Formulario de Reporte</h2>
+                <p>Todos los campos marcados con * son obligatorios.</p>
+            </div>
+            <div class="form-card-body">
+                <form id="report-form" action="https://formspree.io/f/xeopqnkg" method="POST" novalidate>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre">Nombre <span class="req">*</span></label>
+                            <input type="text" id="nombre" name="Nombre" required placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico <span class="req">*</span></label>
+                            <input type="email" id="email" name="_replyto" required placeholder="tu@correo.com">
+                        </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="email">Correo Electrónico <span class="req">*</span></label>
-                        <input type="email" id="email" name="_replyto" required placeholder="tu@correo.com">
+                        <label for="categoria">Categoría del Problema <span class="req">*</span></label>
+                        <select id="categoria" name="Categoría" required>
+                            <option value="">Seleccionar categoría…</option>
+                            <option>Inicio de sesión / Acceso</option>
+                            <option>Signos vitales / Monitoreo</option>
+                            <option>Alertas / Notificaciones</option>
+                            <option>Gestión de pacientes</option>
+                            <option>Dispositivo IoT / Pulsera</option>
+                            <option>Rendimiento / Lentitud</option>
+                            <option>Otro</option>
+                        </select>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="categoria">Categoría del Problema <span class="req">*</span></label>
-                    <select id="categoria" name="Categoría" required>
-                        <option value="">Seleccionar categoría…</option>
-                        <option>Inicio de sesión / Acceso</option>
-                        <option>Signos vitales / Monitoreo</option>
-                        <option>Alertas / Notificaciones</option>
-                        <option>Gestión de pacientes</option>
-                        <option>Dispositivo IoT / Pulsera</option>
-                        <option>Rendimiento / Lentitud</option>
-                        <option>Otro</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="asunto">Asunto <span class="req">*</span></label>
+                        <input type="text" id="asunto" name="Asunto" required
+                            placeholder="Breve descripción del problema">
+                    </div>
 
-                <div class="form-group">
-                    <label for="asunto">Asunto <span class="req">*</span></label>
-                    <input type="text" id="asunto" name="Asunto" required placeholder="Breve descripción del problema">
-                </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción detallada <span class="req">*</span></label>
+                        <textarea id="descripcion" name="Descripcion" required
+                            placeholder="Describe paso a paso cómo ocurre el problema, qué página, qué acción tomaste…"></textarea>
+                    </div>
 
-                <div class="form-group">
-                    <label for="descripcion">Descripción detallada <span class="req">*</span></label>
-                    <textarea id="descripcion" name="Descripcion" required placeholder="Describe paso a paso cómo ocurre el problema, qué página, qué acción tomaste…"></textarea>
-                </div>
+                    <div id="msg"></div>
 
-                <div id="msg"></div>
-
-                <div class="form-actions">
-                    <a href="Soporte.html" class="btn btn-ghost">Regresar</a>
-                    <button type="submit" class="btn btn-navy" id="submit-btn"><i class="bi bi-send-fill"></i> Enviar Reporte</button>
-                </div>
-            </form>
+                    <div class="form-actions">
+                        <a href="Soporte.html" class="btn btn-ghost">Regresar</a>
+                        <button type="submit" class="btn btn-navy" id="submit-btn"><i class="bi bi-send-fill"></i>
+                            Enviar Reporte</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const form   = document.getElementById('report-form');
-    const msgEl  = document.getElementById('msg');
-    const btn    = document.getElementById('submit-btn');
+    <script>
+        const form = document.getElementById('report-form');
+        const msgEl = document.getElementById('msg');
+        const btn = document.getElementById('submit-btn');
 
-    function showMsg(text, type) { msgEl.textContent=text; msgEl.className=type; }
+        function showMsg(text, type) { msgEl.textContent = text; msgEl.className = type; }
 
-    form.addEventListener('submit', async e => {
-        e.preventDefault();
-        msgEl.className=''; msgEl.style.display='none';
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            msgEl.className = ''; msgEl.style.display = 'none';
 
-        // Validate email
-        const emailVal = document.getElementById('email').value;
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-            showMsg('Por favor ingresa un correo electrónico válido.','error');
-            return;
-        }
-
-        // Validate required fields
-        const nombre = document.getElementById('nombre').value.trim();
-        const asunto = document.getElementById('asunto').value.trim();
-        const desc   = document.getElementById('descripcion').value.trim();
-        if (!nombre || !asunto || !desc) {
-            showMsg('Por favor completa todos los campos requeridos.','error');
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
-
-        try {
-            const res = await fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: { 'Accept': 'application/json' }
-            });
-
-            if (res.ok) {
-                showMsg('✓ Reporte enviado exitosamente. Te responderemos pronto.','success');
-                form.reset();
-                setTimeout(() => window.location.href = 'Home.html', 3000);
-            } else {
-                const errData = await res.json();
-                throw new Error(errData.error || 'Error del servidor.');
+            // Validate email
+            const emailVal = document.getElementById('email').value;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                showMsg('Por favor ingresa un correo electrónico válido.', 'error');
+                return;
             }
-        } catch (err) {
-            showMsg('Error al enviar el reporte: ' + err.message + '. Intenta más tarde.','error');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-send-fill"></i> Enviar Reporte';
-        }
-    });
-</script>
-<script src="alertas-globales.js"></script>
+
+            // Validate required fields
+            const nombre = document.getElementById('nombre').value.trim();
+            const asunto = document.getElementById('asunto').value.trim();
+            const desc = document.getElementById('descripcion').value.trim();
+            if (!nombre || !asunto || !desc) {
+                showMsg('Por favor completa todos los campos requeridos.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (res.ok) {
+                    showMsg('✓ Reporte enviado exitosamente. Te responderemos pronto.', 'success');
+                    form.reset();
+                    setTimeout(() => window.location.href = 'Home.html', 3000);
+                } else {
+                    const errData = await res.json();
+                    throw new Error(errData.error || 'Error del servidor.');
+                }
+            } catch (err) {
+                showMsg('Error al enviar el reporte: ' + err.message + '. Intenta más tarde.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> Enviar Reporte';
+            }
+        });
+    </script>
+    <script src="alertas-globales.js"></script>
 </body>
+
 </html>
