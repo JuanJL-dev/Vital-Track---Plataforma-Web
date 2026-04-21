@@ -579,27 +579,27 @@
         }
 
         function filtrarPorFecha() {
-    const fechaSeleccionada = document.getElementById('fecha-filtro').value; 
-    if (!fechaSeleccionada) return;
+            const fechaSeleccionada = document.getElementById('fecha-filtro').value;
+            if (!fechaSeleccionada) return;
 
-    const lecturasFiltradas = todasLasLecturas.filter(l => {
-        if(!l.fecha_registro) return false;
-        
-        const dateObj = new Date(l.fecha_registro);
-        
-        // Extraemos Año, Mes y Día forzando UTC para armar el formato YYYY-MM-DD
-        const yyyy = dateObj.toLocaleString('en-US', { timeZone: 'UTC', year: 'numeric' });
-        const mm = dateObj.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit' });
-        const dd = dateObj.toLocaleString('en-US', { timeZone: 'UTC', day: '2-digit' });
-        
-        const fechaUTC = `${yyyy}-${mm}-${dd}`;
+            const lecturasFiltradas = todasLasLecturas.filter(l => {
+                if (!l.fecha_registro) return false;
 
-        // Ahora comparamos peras con peras en la misma zona horaria
-        return fechaUTC === fechaSeleccionada;
-    });
+                const dateObj = new Date(l.fecha_registro);
 
-    procesarDatos(lecturasFiltradas, fechaSeleccionada);
-}
+                // Extraemos Año, Mes y Día forzando UTC para armar el formato YYYY-MM-DD
+                const yyyy = dateObj.toLocaleString('en-US', { timeZone: 'UTC', year: 'numeric' });
+                const mm = dateObj.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit' });
+                const dd = dateObj.toLocaleString('en-US', { timeZone: 'UTC', day: '2-digit' });
+
+                const fechaUTC = `${yyyy}-${mm}-${dd}`;
+
+                // Ahora comparamos peras con peras en la misma zona horaria
+                return fechaUTC === fechaSeleccionada;
+            });
+
+            procesarDatos(lecturasFiltradas, fechaSeleccionada);
+        }
 
         function limpiarFiltro() {
             document.getElementById('fecha-filtro').value = '';

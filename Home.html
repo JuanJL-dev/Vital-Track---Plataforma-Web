@@ -726,62 +726,64 @@
         async function cargarAlertasRecientes() {
             if (!user?.id) return;
 
-            // 1. Traemos a los pacientes CON sus rangos personalizados
+            // 1. Traemos a los pacientes CON sus rangos personalizados (SIN spo2_max)
             const { data: pacientes } = await _supabase
                 .from('pacientes')
-                .select('id, nombre, apellido, bpm_min, bpm_max, spo2_min, spo2_max, temp_min, temp_max')
+                .select('id, nombre, apellido, bpm_min, bpm_max, spo2_min, temp_min, temp_max')
                 .eq('doctor_id', user.id);
 
             if (!pacientes || pacientes.length === 0) return;
 
             const patientIds = [];
-            const mapPacientes = {}; // Guardaremos toda la info del paciente aquí
+            const mapPacientes = {}; 
 
             pacientes.forEach(p => {
                 patientIds.push(p.id);
-                mapPacientes[p.id] = p; // Guardamos el objeto completo con sus límites
+                mapPacientes[p.id] = p; 
             });
 
-            // 2. Traemos las lecturas no resueltas de estos pacientes
-            // Quitamos el .or() con valores fijos para que JS haga la validación dinámica
-            const { data: alertasDB } = await _supabase
+            // 2. Traemos las lecturas no resueltas
+            const { data: alertasDB, error: alertError } = await _supabase
                 .from('signos_vitales')
                 .select('*')
                 .in('paciente_id', patientIds)
                 .is('alerta_resuelta', false)
                 .order('fecha_registro', { ascending: false });
 
+            if (alertError) {
+                console.error("Error cargando alertas:", alertError);
+                return;
+            }
+
             if (alertasDB) {
                 criticalAlerts = [];
 
                 alertasDB.forEach(record => {
                     const paciente = mapPacientes[record.paciente_id];
-                    if (!paciente) return; // Si por alguna razón no existe, lo saltamos
+                    if (!paciente) return; 
 
                     const name = `${paciente.nombre} ${paciente.apellido}`;
                     const time = new Date(record.fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-                    // 3. Evaluamos dinámicamente contra los rangos del paciente
+                    // 3. Evaluamos dinámicamente
 
                     // Ritmo Cardíaco
                     if (record.bpm > paciente.bpm_max) {
-                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco ALTO: ${record.bpm} BPM (Límite: ${paciente.bpm_max})`, time });
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Taquicardia: ${record.bpm} BPM (Límite: ${paciente.bpm_max})`, time });
                     } else if (record.bpm < paciente.bpm_min) {
-                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco BAJO: ${record.bpm} BPM (Límite: ${paciente.bpm_min})`, time });
+                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-activity', title: `¡ALERTA: ${name}`, body: `Bradicardia: ${record.bpm} BPM (Límite: ${paciente.bpm_min})`, time });
                     }
 
-                    // SpO2
-                    if (record.spo2 > paciente.spo2_max) {
-                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ ALTO: ${record.spo2}% (Límite: ${paciente.spo2_max})`, time });
-                    } else if (record.spo2 < paciente.spo2_min) {
-                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ BAJO: ${record.spo2}% (Límite: ${paciente.spo2_min})`, time });
+                    // SpO2 (Solo evaluamos hipoxia)
+                    if (record.spo2 < paciente.spo2_min) {
+                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `Hipoxia: ${record.spo2}% (Límite: ${paciente.spo2_min})`, time });
                     }
 
                     // Temperatura
                     if (record.temperatura > paciente.temp_max) {
-                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura ALTA: ${record.temperatura}°C (Límite: ${paciente.temp_max})`, time });
+                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Fiebre: ${record.temperatura}°C (Límite: ${paciente.temp_max})`, time });
                     } else if (record.temperatura < paciente.temp_min) {
-                        criticalAlerts.push({ id: record.id, type: 'danger', icon: 'bi-thermometer-snow', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura BAJA: ${record.temperatura}°C (Límite: ${paciente.temp_min})`, time });
+                        criticalAlerts.push({ id: record.id, type: 'warning', icon: 'bi-thermometer-snow', title: `¡ALERTA: ${name}`, body: `Hipotermia: ${record.temperatura}°C (Límite: ${paciente.temp_min})`, time });
                     }
                 });
             }
@@ -789,16 +791,14 @@
 
         window.resolverAlerta = async function (id) {
             criticalAlerts = criticalAlerts.filter(a => String(a.id) !== String(id));
-            renderAlerts(); // Esto refresca la pantalla inmediatamente
+            renderAlerts(); 
 
-            // Mandar el aviso a Supabase
             try {
                 const { error } = await _supabase
                     .from('signos_vitales')
                     .update({ alerta_resuelta: true })
                     .eq('id', id);
 
-                // Si hay un error en la base de datos (por ejemplo, si no existe la columna), lo mostrará en consola
                 if (error) {
                     console.error("Error al actualizar en Supabase:", error.message);
                 }
@@ -860,10 +860,10 @@
             const { id, bpm, spo2, temperatura, paciente_id, fecha_registro } = record;
             const time = new Date(fecha_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-            // Traemos al paciente con sus límites
+            // Traemos al paciente con sus límites (SIN spo2_max)
             const { data: p } = await _supabase
                 .from('pacientes')
-                .select('nombre, apellido, bpm_min, bpm_max, spo2_min, spo2_max, temp_min, temp_max')
+                .select('nombre, apellido, bpm_min, bpm_max, spo2_min, temp_min, temp_max')
                 .eq('id', paciente_id)
                 .single();
 
@@ -874,34 +874,30 @@
 
             // Evaluamos BPM
             if (bpm > p.bpm_max) {
-                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco ALTO: ${bpm} BPM`, time });
-                showToast(`BPM Alto`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Taquicardia: ${bpm} BPM`, time });
+                showToast(`Taquicardia`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
                 needsRender = true;
             } else if (bpm < p.bpm_min) {
-                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-heart-pulse-fill', title: `¡ALERTA CRÍTICA: ${name}`, body: `Ritmo cardíaco BAJO: ${bpm} BPM`, time });
-                showToast(`BPM Bajo`, `${name} – ${bpm} BPM a las ${time}`, 'danger');
+                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-activity', title: `¡ALERTA: ${name}`, body: `Bradicardia: ${bpm} BPM`, time });
+                showToast(`Bradicardia`, `${name} – ${bpm} BPM a las ${time}`, 'warning');
                 needsRender = true;
             }
 
-            // Evaluamos SpO2
-            if (spo2 > p.spo2_max) {
-                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ ALTO: ${spo2}%`, time });
-                showToast(`SpO₂ Alto`, `${name} – ${spo2}% a las ${time}`, 'warning');
-                needsRender = true;
-            } else if (spo2 < p.spo2_min) {
-                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `SpO₂ BAJO: ${spo2}%`, time });
-                showToast(`SpO₂ Bajo`, `${name} – ${spo2}% a las ${time}`, 'warning');
+            // Evaluamos SpO2 (Solo Hipoxia)
+            if (spo2 < p.spo2_min) {
+                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-lungs-fill', title: `¡ALERTA: ${name}`, body: `Hipoxia: ${spo2}%`, time });
+                showToast(`Hipoxia`, `${name} – ${spo2}% a las ${time}`, 'warning');
                 needsRender = true;
             }
 
             // Evaluamos Temperatura
             if (temperatura > p.temp_max) {
-                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura ALTA: ${temperatura}°C`, time });
-                showToast(`Temperatura Alta`, `${name} – ${temperatura}°C a las ${time}`, 'danger');
+                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-thermometer-high', title: `¡ALERTA CRÍTICA: ${name}`, body: `Fiebre: ${temperatura}°C`, time });
+                showToast(`Fiebre`, `${name} – ${temperatura}°C a las ${time}`, 'danger');
                 needsRender = true;
             } else if (temperatura < p.temp_min) {
-                criticalAlerts.unshift({ id, type: 'danger', icon: 'bi-thermometer-snow', title: `¡ALERTA CRÍTICA: ${name}`, body: `Temperatura BAJA: ${temperatura}°C`, time });
-                showToast(`Temperatura Baja`, `${name} – ${temperatura}°C a las ${time}`, 'danger');
+                criticalAlerts.unshift({ id, type: 'warning', icon: 'bi-thermometer-snow', title: `¡ALERTA: ${name}`, body: `Hipotermia: ${temperatura}°C`, time });
+                showToast(`Hipotermia`, `${name} – ${temperatura}°C a las ${time}`, 'warning');
                 needsRender = true;
             }
 
@@ -942,6 +938,7 @@
             startRealtime();
         });
     </script>
+    <script src="alertas-globales.js"></script>
 </body>
 
 </html>

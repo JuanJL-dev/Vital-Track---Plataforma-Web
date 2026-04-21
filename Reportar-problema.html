@@ -202,6 +202,7 @@
             font-size: 13px;
             font-weight: 600;
             display: none;
+            line-height: 1.5;
         }
 
         #msg.success {
@@ -269,6 +270,38 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* --- NUEVAS MEJORAS: Animaciones y validaciones visuales --- */
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
+        }
+
+        #msg.success, #msg.error {
+            animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Borde rojo cuando el usuario se equivoca */
+        .input-error {
+            border-color: var(--danger) !important;
+            background-color: #fff1f2 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Botón verde de éxito animado */
+        .btn-success-state {
+            background-color: var(--ok) !important;
+            color: white !important;
+            pointer-events: none;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
@@ -317,13 +350,13 @@
                         <label for="categoria">Categoría del Problema <span class="req">*</span></label>
                         <select id="categoria" name="Categoría" required>
                             <option value="">Seleccionar categoría…</option>
-                            <option>Inicio de sesión / Acceso</option>
-                            <option>Signos vitales / Monitoreo</option>
-                            <option>Alertas / Notificaciones</option>
-                            <option>Gestión de pacientes</option>
-                            <option>Dispositivo IoT / Pulsera</option>
-                            <option>Rendimiento / Lentitud</option>
-                            <option>Otro</option>
+                            <option value="Inicio de sesión / Acceso">Inicio de sesión / Acceso</option>
+                            <option value="Signos vitales / Monitoreo">Signos vitales / Monitoreo</option>
+                            <option value="Alertas / Notificaciones">Alertas / Notificaciones</option>
+                            <option value="Gestión de pacientes">Gestión de pacientes</option>
+                            <option value="Dispositivo IoT / Pulsera">Dispositivo IoT / Pulsera</option>
+                            <option value="Rendimiento / Lentitud">Rendimiento / Lentitud</option>
+                            <option value="Otro">Otro</option>
                         </select>
                     </div>
 
@@ -356,28 +389,80 @@
         const msgEl = document.getElementById('msg');
         const btn = document.getElementById('submit-btn');
 
-        function showMsg(text, type) { msgEl.textContent = text; msgEl.className = type; }
+        function showMsg(text, type) { 
+            msgEl.innerHTML = text; // Se usa innerHTML para admitir saltos de línea (HTML)
+            msgEl.className = type; 
+        }
+
+        // Función para limpiar los bordes rojos
+        function clearErrors() {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => input.classList.remove('input-error'));
+        }
+
+        // Quitar el borde rojo en cuanto el usuario empieza a escribir o seleccionar
+        form.addEventListener('input', (e) => {
+            if(e.target.classList.contains('input-error')) {
+                e.target.classList.remove('input-error');
+            }
+        });
 
         form.addEventListener('submit', async e => {
             e.preventDefault();
-            msgEl.className = ''; msgEl.style.display = 'none';
+            msgEl.className = ''; 
+            msgEl.style.display = 'none';
+            clearErrors(); // Limpiar errores anteriores
 
-            // Validate email
-            const emailVal = document.getElementById('email').value;
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-                showMsg('Por favor ingresa un correo electrónico válido.', 'error');
+            let errores = []; // Aquí recolectaremos todas las advertencias
+
+            // 1. Validar Nombre
+            const nombreEl = document.getElementById('nombre');
+            if (!nombreEl.value.trim()) {
+                nombreEl.classList.add('input-error');
+                errores.push('Falta ingresar tu <strong>nombre</strong>.');
+            }
+
+            // 2. Validar Correo Electrónico
+            const emailEl = document.getElementById('email');
+            const emailVal = emailEl.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailVal) {
+                emailEl.classList.add('input-error');
+                errores.push('Falta ingresar tu <strong>correo electrónico</strong>.');
+            } else if (!emailRegex.test(emailVal)) {
+                emailEl.classList.add('input-error');
+                errores.push('El <strong>correo electrónico</strong> ingresado no es válido.');
+            }
+
+            // 3. Validar Categoría
+            const categoriaEl = document.getElementById('categoria');
+            if (!categoriaEl.value) {
+                categoriaEl.classList.add('input-error');
+                errores.push('Debes seleccionar una <strong>categoría</strong> del problema.');
+            }
+
+            // 4. Validar Asunto
+            const asuntoEl = document.getElementById('asunto');
+            if (!asuntoEl.value.trim()) {
+                asuntoEl.classList.add('input-error');
+                errores.push('Falta ingresar el <strong>asunto</strong>.');
+            }
+
+            // 5. Validar Descripción
+            const descEl = document.getElementById('descripcion');
+            if (!descEl.value.trim()) {
+                descEl.classList.add('input-error');
+                errores.push('Falta ingresar la <strong>descripción detallada</strong>.');
+            }
+
+            // Si hay errores, los unimos en una lista y los mostramos
+            if (errores.length > 0) {
+                const mensajeError = "Por favor corrige lo siguiente:<br>• " + errores.join("<br>• ");
+                showMsg(mensajeError, 'error');
                 return;
             }
 
-            // Validate required fields
-            const nombre = document.getElementById('nombre').value.trim();
-            const asunto = document.getElementById('asunto').value.trim();
-            const desc = document.getElementById('descripcion').value.trim();
-            if (!nombre || !asunto || !desc) {
-                showMsg('Por favor completa todos los campos requeridos.', 'error');
-                return;
-            }
-
+            // Si todo está correcto, comenzamos proceso de envío
             btn.disabled = true;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
 
@@ -389,8 +474,15 @@
                 });
 
                 if (res.ok) {
-                    showMsg('✓ Reporte enviado exitosamente. Te responderemos pronto.', 'success');
+                    showMsg('<i class="bi bi-check-circle-fill"></i> Reporte enviado exitosamente. Te responderemos pronto.', 'success');
+                    
+                    // Animación de éxito en el botón
+                    btn.classList.add('btn-success-state');
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> ¡Reporte Enviado!';
+                    
                     form.reset();
+                    
+                    // Redirigimos después de 3 segundos
                     setTimeout(() => window.location.href = 'Home.html', 3000);
                 } else {
                     const errData = await res.json();
